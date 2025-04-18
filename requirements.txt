@@ -1,0 +1,5 @@
+jiwer
+rouge-score
+requests
+fastapi
+uvicorn[standard]
