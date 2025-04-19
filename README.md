@@ -1,4 +1,4 @@
-# BrainHack TIL-24 Base
+# BrainHack TIL-AI 2025
 
 ## Important Links
 
