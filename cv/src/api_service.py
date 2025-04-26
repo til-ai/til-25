@@ -10,13 +10,16 @@ cv_manager = CVManager()
 
 @app.get("/health")
 def health():
+    """
+    Healthcheck function for your model.
+    """
     return {"message": "health ok"}
 
 
 @app.post("/identify")
 async def identify(instance: Request):
     """
-    Performs Object Detection given an image frame
+    Performs Object Detection given an image frame.
     """
     # get base64 encoded string of image, convert back into bytes
     input_json = await instance.json()

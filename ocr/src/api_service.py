@@ -10,6 +10,9 @@ ocr_manager = OCRManager()
 
 @app.get("/health")
 def health():
+    """
+    Healthcheck function for your model.
+    """
     return {"message": "health ok"}
 
 

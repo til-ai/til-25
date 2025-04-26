@@ -1,8 +1,9 @@
 import json
-import websockets
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import httpx
+import websockets
 
 
 class FinalsManager(ABC):
@@ -13,11 +14,11 @@ class FinalsManager(ABC):
     async def exit(self):
         await self.client.aclose()
 
-    async def async_post(self, endpoint: str, json: Optional[Dict] = None):
+    async def async_post(self, endpoint: str, json: dict | None = None):
         return await self.client.post(endpoint, json=json, timeout=None)
 
     async def send_result(
-        self, websocket: websockets.WebSocketClientProtocol, data: Dict[str, Any]
+        self, websocket: websockets.WebSocketClientProtocol, data: dict[str, Any]
     ):
         return await websocket.send(json.dumps(data))
 
@@ -26,7 +27,7 @@ class FinalsManager(ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def run_nlp(self, transcript: str) -> Dict[str, str]:
+    async def run_nlp(self, transcript: str) -> dict[str, str]:
         raise NotImplemented
 
     @abstractmethod
@@ -38,5 +39,5 @@ class FinalsManager(ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def run_vlm(self, image_bytes: bytes, caption: str) -> List[int]:
+    async def run_vlm(self, image_bytes: bytes, caption: str) -> list[int]:
         raise NotImplemented

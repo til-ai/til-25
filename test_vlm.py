@@ -1,13 +1,14 @@
 import base64
 import json
-from typing import Dict, List
+import os
+from pathlib import Path
+
 import pandas as pd
 import requests
-from tqdm import tqdm
-from pathlib import Path
-from scoring.vlm_eval import vlm_eval
 from dotenv import load_dotenv
-import os
+from tqdm import tqdm
+
+from scoring.vlm_eval import vlm_eval
 
 load_dotenv()
 
@@ -16,10 +17,8 @@ TEAM_TRACK = os.getenv("TEAM_TRACK")
 
 
 def main():
-    # input_dir = Path(f"/home/jupyter/{TEAM_TRACK}")
-    input_dir = Path(f"../../data/{TEAM_TRACK}/train")
-    # results_dir = Path(f"/home/jupyter/{TEAM_NAME}")
-    results_dir = Path("results")
+    input_dir = Path(f"/home/jupyter/{TEAM_TRACK}")
+    results_dir = Path(f"/home/jupyter/{TEAM_NAME}")
 
     results_dir.mkdir(parents=True, exist_ok=True)
     instances = []
@@ -64,8 +63,8 @@ def main():
 
 
 def run_batched(
-    instances: List[Dict[str, str | int]], batch_size: int = 4
-) -> List[Dict[str, str | int]]:
+    instances: list[dict[str, str | int]], batch_size: int = 4
+) -> list[dict[str, str | int]]:
     # split into batches
     results = []
     for index in tqdm(range(0, len(instances), batch_size)):

@@ -2,21 +2,23 @@
 
 ## Important Links
 
+TODO!
+
 - [Guardian's Handbook](https://www.notion.so/tribegroup/BrainHack-2024-TIL-AI-Guardian-s-Handbook-c5d4ec3c3bd04b0db0329884c220791f)
 - [Educational Content on Google Drive](https://drive.google.com/drive/folders/1JmeEwQZoqobPmUeSZWrvR5Inrw6NJ8Kr)
-- [Vertex AI Workbench on GCP](https://console.cloud.google.com/vertex-ai/workbench/instances?project=dsta-angelhack)
+- [Vertex AI Workbench on GCP](https://console.cloud.google.com/vertex-ai/workbench/instances?project=til-ai-2025)
 
 ## First-time setup
 
-Fork this repository on GitHub, and then clone your fork into the `$HOME` directory (should be `/home/jupyter`) of your GCP Vertex AI Workbench instance. Note that to clone your repository on the instance, you will likely need to [create a GitHub Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
+Create a **PRIVATE** repository using this GitHub repository as a template, then clone that repository into the `$HOME` directory (should be `/home/jupyter/`) of your GCP Vertex AI Workbench instance. Note that to clone your repository on the instance, you will likely need to [create a GitHub Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
 
-Then from your instance, run the following command from the root of your cloned repository (e.g. `cd til-24-base`), replacing `TEAM-NAME` with your team name and `TRACK` with your track, either `novice` or `advanced`. Note that your team name should be converted to all lowercase, with spaces replaced with `-` (i.e. same as your team channel's name on Discord). For example, team `Yes But No` becomes `yes-but-no`. Note that for team `NubbiesDubbiesWubbiesTubbies`, your team name is too long, please put down `nubbiesdubbieswubbiestubbie` instead.
+Then from your instance, run the following command from the root of your cloned repository (e.g. `cd til-25`), replacing `TEAM-NAME` with your team name and `TRACK` with your track, either `novice` or `advanced`. Note that your team name should be converted to all lowercase, with spaces replaced with `-`, truncated to 20 characters (i.e. same as your team channel's name on Discord). For example, team `Yes But No` becomes `yes-but-no`.
 
 ```bash
 bash init.bash TEAM-NAME TRACK
 ```
 
-This should initialize [GCSFuse](https://cloud.google.com/storage/docs/gcs-fuse) to allow you to access your track's data GCS bucket (either `til-ai-24-novice` or `til-ai-24-advanced`, mounted at `$HOME/novice` or `$HOME/advanced` respectively), the NSC data bucket (`til-ai-24-data` mounted at `$HOME/nsc`) as well as your own team's private GCS bucket (`TEAM-NAME-til-ai-24` mounted at `$HOME/TEAM-NAME`) on your local filesystem. It should also configure Docker authentication to authenticate for the `asia-southeast1` Artifact Registry, as well as configure the default Docker repository to be your team's private repository (`repository-TEAM-NAME`).
+This should initialize [GCSFuse](https://cloud.google.com/storage/docs/gcs-fuse) to allow you to access your track's data GCS bucket (either `til-ai-24-novice` or `til-ai-24-advanced`, mounted at `$HOME/novice` or `$HOME/advanced` respectively), the NSC data bucket (`til-ai-25-data` mounted at `$HOME/nsc`) as well as your own team's private GCS bucket (`TEAM-NAME-bucket-til-25` mounted at `$HOME/TEAM-NAME`) on your local filesystem. It should also configure Docker authentication to authenticate for the `asia-southeast1` Artifact Registry, as well as configure the default Docker repository to be your team's private repository (`TEAM-NAME-repo-til-25`).
 
 WARNING: Do not run `init.bash` twice. While it shouldn't brick your instance, there's a chance it may. Run it once, with the right arguments, and everything will be fine.
 
@@ -31,27 +33,28 @@ In this competition we will leverage Docker extensively to ensure that models ar
 Broadly, this repository is split into several subdirectories based on the tasks in the competition.
 
 - `asr`: For the automatic speech recognition (ASR) task.
-- `nlp`: For the natural language processing (NLP) task.
-- `vlm`: For the object detection by vision-language model (VLM) task.
+- `cv`: For the computer vision (CV) object detection task.
+- `ocr`: For the optical character recognition (OCR) task.
+- `rl`: For the reinforcement learning (RL) task.
 - `scoring`: directory containing the evaluation functions we will be using to evaluate your models. You should NOT modify anything in here. If you notice an issue with any of the `scoring` functions, please bring it up with an AngelHack or DSTA staff member.
 
-Note also several example test scripts made available for testing your ASR, NLP, and VLM models; see the `test_asr.py`, `test_nlp.py`, and `test_vlm.py` files, respectively.
+Note also several example test scripts made available for testing your ASR, OCR, CV, and RL models; see the `test_asr.py`, `test_ocr.py`, `test_cv.py`, and `test_rl.py` files, respectively.
 
 ### Compute Availability
 
 The online development environment gives each team access to a Linux virtual machine with:
 
-- [n1-standard-4](https://cloud.google.com/compute/docs/general-purpose-machines#n1_machine_types) (4 cores, 15 GB RAM)
+- [n1-standard-8](https://cloud.google.com/compute/docs/general-purpose-machines#n1_machine_types) (8 cores, 30 GB RAM)
 - Nvidia Tesla T4 (16 GB VRAM)
-- 200 GB Disk space
+- 500 GB Disk space (150GB on the boot disk, and 350GB on the data disk mounted at `/home/jupyter/`)
 
 In the Semi-Finals and Finals, teams will have access to a Linux machine with the following:
 
 - Intel Core i7-14700K
 - 32 GB RAM
-- Nvidia RTX 4070 Ti Super (16 GB VRAM)
+- Nvidia RTX 50xx (minimum 16 GB VRAM, exact model TBD)
 - 1 TB Disk space
-- Ubuntu 20.04
+- Ubuntu 22.04
 
 Note that this means you should not be finding the absolute largest possible models to train and submit in the Virtual Qualifiers, as you may be unable to run all your models simultaneously on the hardware available to you later on in the Semi-Finals/Finals. Be sure to test your submitted models to ensure they will all fit into the available VRAM of your machine, and plan around this limitation accordingly!
 
@@ -63,6 +66,8 @@ While your team is free to use whatever libraries you wish to use for data augme
 
 ### Dataset Details
 
+TODO!
+
 While Operation Guardian seeks to deploy a cutting-edge defence system across the nation through the use of autonomous air defence turrets to identify, classify and take down air threats, numerous obstacles stand in the path of the Guardians working to develop the AI algorithm.
 
 In a fortified outpost nestled amidst rugged terrains, the seamless flow of communication between the Command and Control Centre (C2) and turret is starting to falter, plagued by the creep of corruption within the radio transmissions. Each command issued by the control room is met with a barrage of **static radio communications noise**, rendering the instructions barely inaudible. The relentless march of time only serves to exacerbate the issue, as **the noise within the radio transmissions worsens with each passing day**.
@@ -70,6 +75,8 @@ In a fortified outpost nestled amidst rugged terrains, the seamless flow of comm
 Furthermore, as the robots mounted atop the turrets have been in use for quite some time, the robot sensors are starting to exhibit signs of degradation, with a growing veil of **digital noise** cast over its view of the world. With each passing day, the cacophony of distortions is forecasted to intensify, obscuring the once-clear images perceived by the sensor. While half of the robots which have been designated to the Novice Guardians have already been replaced by brand new equipment, **those assigned to the Advanced Guardians are still awaiting replacement**. Consequently, the **Advanced Guardians have to adapt to increasingly noisy visual images** and navigate through the challenges posed by their deteriorating sensors.
 
 #### Misc Technical Details
+
+TODO!
 
 Audio files are provided in .WAV format with a sample rate of 16 kHz. Images are provided as 1520x870 JPG files.
 
@@ -101,11 +108,11 @@ Then you should follow along with the [albumentations guide for bounding box aug
 
 Teams are advised to submit early; don't put it off all the way until the end! Note that the leaderboard reflects your latest submission, not your best all-time submission. While you are encouraged to experiment and make several submissions, your progression onto the semi-finals and finals will be based on the leaderboard positions after your team's final submissions before the submission deadline. The responsibility is on you and your team to ensure that the results from your best models are what will be used to determine whether you progress.
 
-Teams are also recommended to test their Docker containers prior to submission using the provided test scripts (i.e. `test_asr.py`, `test_nlp.py`, `test_vlm.py`) to ensure that most of the common bugs regarding hitting your container endpoints are resolved first. This also allows teams to improve their own speed of iteration as submission evaluation can take upwards of an hour.
+Teams are also recommended to test their Docker containers prior to submission using the provided test scripts (i.e. `test_asr.py`, `test_ocr.py`, `test_rl.py`) to ensure that most of the common bugs regarding hitting your container endpoints are resolved first. This also allows teams to improve their own speed of iteration as submission evaluation can take upwards of an hour.
 
 ### Building a container
 
-To build your container, run the following command from where your Dockerfile is located, which should be the directory of your container (e.g. `/asr`). Be sure to also update the tag (the `-t` flag) with your team name and the model task (`asr`, `nlp`, `vlm`) accordingly.
+To build your container, run the following command from where your Dockerfile is located, which should be the directory of your container (e.g. `/asr`). Be sure to also update the tag (the `-t` flag) with your team name and the model task (`asr`, `ocr`, `cv`, `rl`) accordingly.
 
 ```bash
 docker build -t TEAM-NAME-asr .
@@ -141,26 +148,26 @@ Model submission is being handled entirely through GCP as well. You first push y
 
 #### Push to Artifact Registry
 
-You tag your container (`TEAM-NAME-asr` in the below example) locally with your remote repository (`repository-TEAM-NAME` below) and the artifact+tag (`TEAM-NAME-asr:latest` in the example) you want to push to. Then you run `docker push` to actually push.
+You tag your container (`TEAM-NAME-asr` in the below example) locally with your remote repository (`TEAM-NAME-repo-til-25` below) and the artifact+tag (`TEAM-NAME-asr:latest` in the example) you want to push to. Then you run `docker push` to actually push.
 
 ```bash
-docker tag TEAM-NAME-asr asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-TEAM-NAME/TEAM-NAME-asr:latest
-docker push asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-TEAM-NAME/TEAM-NAME-asr:latest
+docker tag TEAM-NAME-asr asia-southeast1-docker.pkg.dev/dsta-angelhack/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest
+docker push asia-southeast1-docker.pkg.dev/dsta-angelhack/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest
 ```
 
-When your model is pushed successfully, you should be able to see it under your team's repository on [Artifact Registry](https://console.cloud.google.com/artifacts/docker/dsta-angelhack/asia-southeast1).
+When your model is pushed successfully, you should be able to see it under your team's repository on [Artifact Registry](https://console.cloud.google.com/artifacts/docker/til-ai-2025/asia-southeast1).
 
 #### Upload to Model Registry for Submission
 
-Once your model is on Artifact Registry, you can submit it by uploading it to Model Registry. Note that the subsequent automated model evaluation depends on the `--display-name` parameter, where the last 3 characters (`asr` in the following example) determine which task the model is meant to accomplish. The possible options as `asr`, `nlp`, and `vlm`. We suggest the same format as suggested before, `{TEAM-NAME}-{TASK}`.
+Once your model is on Artifact Registry, you can submit it by uploading it to Model Registry. Note that the subsequent automated model evaluation depends on the `--display-name` parameter, where the last 3 characters (`asr` in the following example) determine which task the model is meant to accomplish. The possible options are `asr`, `ocr`, `cv`, and `rl`. We suggest the same format as suggested before, `{TEAM-NAME}-{TASK}`.
 
 Take note to update the flags `--container-health-route`, `--container-predict-route`, `--container-ports`, etc., which describe how our automation can interact with your container. For more, see the GCP Vertex AI documentation on [importing models programmatically](https://cloud.google.com/vertex-ai/docs/model-registry/import-model#import_a_model_programmatically) and all [the optional flags](https://cloud.google.com/sdk/gcloud/reference/ai/models/upload#OPTIONAL-FLAGS). The `health-route`should accept GET requests and return `200 OK` if the container is ready to receive prediction requests. The `predict-route` should accept POST requests and actually handle inference/prediction. The `ports` should be a comma-separated list (or a single value) of the ports your container has exposed.
 
 ```bash
-gcloud ai models upload --region asia-southeast1 --display-name 'TEAM-NAME-asr' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-TEAM-NAME/TEAM-NAME-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
+gcloud ai models upload --region asia-southeast1 --display-name 'TEAM-NAME-asr' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
 ```
 
-Shortly after successfully running the command, you should receive a Discord notification providing a link to review the status of a batch prediction job which evalulates your model accuracy and speed. If you do not, ping `@alittleclarity` on the BH24 TIL-AI Discord server in your team's private channel.
+Shortly after successfully running the command, you should receive a Discord notification providing a link to review the status of a batch prediction job which evalulates your model accuracy and speed. If you do not, ping `@tech` on the BrainHack TIL-AI 2025 Discord server in your team's private channel.
 
 When the job finishes, which could take anywhere from 20 minutes to an hour, your model results will be updated on the leaderboard and you should be notified accordingly in your team's private Discord channel. If you don't get any updates, check the status on your batch prediction link. Note that during periods of high traffic/demand, it is likely that your job will take longer.
 
@@ -174,7 +181,7 @@ Don't run `init.bash` more than once. If your initialization doesn't work proper
 
 #### GCP Auth Credentials
 
-By default, the Vertex AI instances are set up to use the auth credentials of your team's GCP service account, which all the subsequent automations and permissions depends on. You can check which credentials you are using by running `gcloud auth list`. If you've set up additional credentials (e.g. by using `gcloud auth login`), your model submission commands may not work properly. You can switch which credentials are active using the `gcloud config set account SERVICE-ACCOUNT-EMAIL@dsta-angelhack.iam.gserviceaccount.com` command, where `SERVICE-ACCOUNT-EMAIL` is the email of your service account (which should be either `svc-TEAM-NAME` or `sa-TEAM-NAME`).
+By default, the Vertex AI instances are set up to use the auth credentials of your team's GCP service account, which all the subsequent automations and permissions depends on. You can check which credentials you are using by running `gcloud auth list`. If you've set up additional credentials (e.g. by using `gcloud auth login`), your model submission commands may not work properly. You can switch which credentials are active using the `gcloud config set account svc-TEAM-NAME@dsta-angelhack.iam.gserviceaccount.com` command, replacing `TEAM-NAME` with your team name.
 
 #### Loading JupyterLab
 

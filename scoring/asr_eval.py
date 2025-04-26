@@ -1,5 +1,4 @@
 import jiwer
-from typing import List
 
 wer_transforms = jiwer.Compose(
     [
@@ -11,7 +10,7 @@ wer_transforms = jiwer.Compose(
 )
 
 
-def asr_eval(truth: List[str], hypothesis: List[str]) -> float:
+def asr_eval(truth: list[str], hypothesis: list[str]) -> float:
     result = jiwer.wer(
         truth,
         hypothesis,

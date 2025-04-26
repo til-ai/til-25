@@ -1,5 +1,5 @@
 from base64 import b64encode
-from typing import Dict, List
+
 from finals_manager import FinalsManager
 
 
@@ -16,7 +16,7 @@ class ModelsManager(FinalsManager):
         )
         return results.json()["predictions"][0]
 
-    async def run_nlp(self, transcript: str) -> Dict[str, str]:
+    async def run_nlp(self, transcript: str) -> dict[str, str]:
         print("Running NLP")
         results = await self.async_post(
             f"http://{self.local_ip}:5002/extract",
@@ -38,7 +38,7 @@ class ModelsManager(FinalsManager):
         results = await self.async_post(f"http://{self.local_ip}:5003/reset_cannon")
         return results.json()
 
-    async def run_vlm(self, image_bytes: bytes, caption: str) -> List[int]:
+    async def run_vlm(self, image_bytes: bytes, caption: str) -> list[int]:
         print("Running VLM")
         image_str = b64encode(image_bytes).decode("ascii")
         results = await self.async_post(

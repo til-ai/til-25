@@ -2,10 +2,9 @@
 
 
 from statistics import mean
-from typing import List, Optional
 
 
-def bb_iou(bb1: Optional[List[int]], bb2: List[int]) -> int:
+def bb_iou(bb1: None | list[int], bb2: list[int]) -> int:
     """
     Calculate the Intersection over Union (IoU) of two bounding boxes in ltwh format.
 
@@ -51,7 +50,7 @@ def bb_iou(bb1: Optional[List[int]], bb2: List[int]) -> int:
 
 
 def vlm_eval(
-    bbox_truths: List[Optional[List[int]]], bbox_predictions: List[List[int]]
+    bbox_truths: list[None | list[int]], bbox_predictions: list[list[int]]
 ) -> float:
     return mean(
         bb_iou(bb_truth, bb_pred)

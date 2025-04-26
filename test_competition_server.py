@@ -3,13 +3,14 @@ import json
 import logging
 import os
 from time import time
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
+
 from scoring.nlp_eval import nlp_eval
 from scoring.vlm_eval import vlm_eval
-from starlette.responses import FileResponse
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -44,7 +45,7 @@ class MockConnectionManager:
     def __init__(self):
         self.simulator_connection: WebSocket | None = None
         self.team_connection: WebSocket | None = None
-        self.team_bbox: List[int] = [0, 0, 0, 0]
+        self.team_bbox: list[int] = [0, 0, 0, 0]
         self.autonomy_connection: WebSocket | None = None
 
     async def simulator_connect(self, websocket: WebSocket):
@@ -130,7 +131,7 @@ async def simulator_websocket(websocket: WebSocket):
 async def team_endpoint(websocket: WebSocket, team_name: str):
     await manager.team_connect(websocket)
     try:
-        responses: List[Dict[str, Any]] = []
+        responses: list[dict[str, Any]] = []
         for case in testcases:
             with open("simulator/data/audio/" + case["audio"], "rb") as file:
                 audio_bytes = file.read()

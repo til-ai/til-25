@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Request
 import base64
+
 from ASRManager import ASRManager
+from fastapi import FastAPI, Request
 
 app = FastAPI()
 
@@ -9,6 +10,9 @@ asr_manager = ASRManager()
 
 @app.get("/health")
 def health():
+    """
+    Healthcheck function for your model.
+    """
     return {"message": "health ok"}
 
 

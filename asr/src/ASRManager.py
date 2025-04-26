@@ -1,8 +1,12 @@
 class ASRManager:
     def __init__(self):
-        # initialize the model here
-        pass
+        """
+        Initializes the ASRManager. This is where you should
+        initialize your model and any static configurations.
+        """
 
     def transcribe(self, audio_bytes: bytes) -> str:
-        # perform ASR transcription
+        """
+        Perform ASR transcription.
+        """
         return ""

@@ -1,11 +1,12 @@
-from typing import List
-
-
 class CVManager:
     def __init__(self):
-        # initialize the model here
-        pass
+        """
+        Initializes the CVManager. This is where you should
+        initialize your model and any static configurations.
+        """
 
-    def identify(self, image: bytes) -> List[List[int]]:
-        # perform object detection, return bounding boxes
+    def identify(self, image: bytes) -> list[list[int]]:
+        """
+        Performs object detection, returning a list of bounding boxes.
+        """
         return []

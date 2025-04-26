@@ -1,5 +1,5 @@
 from asyncio import sleep
-from typing import Dict, List
+
 from finals_manager import FinalsManager
 
 
@@ -11,7 +11,7 @@ class MockManager(FinalsManager):
         print("Running ASR")
         return "asr"
 
-    async def run_nlp(self, transcript: str) -> Dict[str, str]:
+    async def run_nlp(self, transcript: str) -> dict[str, str]:
         print("Running NLP")
         return {
             "target": "airplane",
@@ -19,7 +19,7 @@ class MockManager(FinalsManager):
             "tool": "surface-to-air missiles",
         }
 
-    async def run_vlm(self, image_bytes: bytes, caption: str) -> List[int]:
+    async def run_vlm(self, image_bytes: bytes, caption: str) -> list[int]:
         print("Running VLM")
         return [0, 0, 0, 0]
 

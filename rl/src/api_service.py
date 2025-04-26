@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request
-
 from RLManager import RLManager
 
 app = FastAPI()
@@ -9,6 +8,7 @@ rl_manager = RLManager()
 
 @app.get("/health")
 def health():
+    """Healthcheck function for your model."""
     return {"message": "health ok"}
 
 
@@ -27,3 +27,10 @@ async def rl(request: Request):
     for instance in input_json["instances"]:
         predictions.append({"action": rl_manager.get_action(instance["observation"])})
     return {"predictions": predictions}
+
+
+@app.post("/reset")
+async def reset(request: Request):
+    """Resets any persistent state of the RLManager."""
+    RLManager.reset()
+    return
