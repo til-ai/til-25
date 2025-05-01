@@ -1,9 +1,9 @@
 FROM python:3.8.15-slim-buster
 
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 RUN pip install -U pip
 COPY requirements.txt .

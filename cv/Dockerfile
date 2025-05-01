@@ -4,10 +4,10 @@
 FROM us-docker.pkg.dev/deeplearning-platform-release/gcr.io/pytorch-gpu.2-2.py310
 
 # Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # pip gives a warning if you install packages as root
 # set this flag to just ignore the warning

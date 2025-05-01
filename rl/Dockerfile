@@ -2,10 +2,10 @@
 FROM --platform=linux/amd64 python:3.11-slim
 
 # Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # pip gives a warning if you install packages as root
 # set this flag to just ignore the warning
