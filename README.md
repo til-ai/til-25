@@ -50,13 +50,15 @@ The online development environment gives each team access to a Linux virtual mac
 
 In the Semi-Finals and Finals, teams will have access to a Linux machine with the following:
 
-- Intel Core i7-14700K
+- Intel Core i7-14700KF
 - 32 GB RAM
 - Nvidia RTX 50xx (minimum 16 GB VRAM, exact model TBD)
 - 1 TB Disk space
-- Ubuntu 22.04
+- Ubuntu 24.04
 
 Note that this means you should not be finding the absolute largest possible models to train and submit in the Virtual Qualifiers, as you may be unable to run all your models simultaneously on the hardware available to you later on in the Semi-Finals/Finals. Be sure to test your submitted models to ensure they will all fit into the available VRAM of your machine, and plan around this limitation accordingly!
+
+Note also that the GPU in the finals is on the new Blackwell chip architecture, which thus implies that it runs CUDA 12.8. As a result, your code in Qualifiers may not work seamlessly on the Finals hardware. Do ensure to think through how to get your models to run properly on the Finals hardware!
 
 ## Data Augmentation
 
@@ -151,8 +153,8 @@ Model submission is being handled entirely through GCP as well. You first push y
 You tag your container (`TEAM-NAME-asr` in the below example) locally with your remote repository (`TEAM-NAME-repo-til-25` below) and the artifact+tag (`TEAM-NAME-asr:latest` in the example) you want to push to. Then you run `docker push` to actually push.
 
 ```bash
-docker tag TEAM-NAME-asr asia-southeast1-docker.pkg.dev/dsta-angelhack/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest
-docker push asia-southeast1-docker.pkg.dev/dsta-angelhack/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest
+docker tag TEAM-NAME-asr asia-southeast1-docker.pkg.dev/til-ai-2025/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest
+docker push asia-southeast1-docker.pkg.dev/til-ai-2025/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest
 ```
 
 When your model is pushed successfully, you should be able to see it under your team's repository on [Artifact Registry](https://console.cloud.google.com/artifacts/docker/til-ai-2025/asia-southeast1).
@@ -164,7 +166,7 @@ Once your model is on Artifact Registry, you can submit it by uploading it to Mo
 Take note to update the flags `--container-health-route`, `--container-predict-route`, `--container-ports`, etc., which describe how our automation can interact with your container. For more, see the GCP Vertex AI documentation on [importing models programmatically](https://cloud.google.com/vertex-ai/docs/model-registry/import-model#import_a_model_programmatically) and all [the optional flags](https://cloud.google.com/sdk/gcloud/reference/ai/models/upload#OPTIONAL-FLAGS). The `health-route`should accept GET requests and return `200 OK` if the container is ready to receive prediction requests. The `predict-route` should accept POST requests and actually handle inference/prediction. The `ports` should be a comma-separated list (or a single value) of the ports your container has exposed.
 
 ```bash
-gcloud ai models upload --region asia-southeast1 --display-name 'TEAM-NAME-asr' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
+gcloud ai models upload --region asia-southeast1 --display-name 'TEAM-NAME-asr' --container-image-uri asia-southeast1-docker.pkg.dev/til-ai-2025/TEAM-NAME-repo-til-25/TEAM-NAME-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
 ```
 
 Shortly after successfully running the command, you should receive a Discord notification providing a link to review the status of a batch prediction job which evalulates your model accuracy and speed. If you do not, ping `@tech` on the BrainHack TIL-AI 2025 Discord server in your team's private channel.
@@ -177,11 +179,11 @@ When the job finishes, which could take anywhere from 20 minutes to an hour, you
 
 #### init.bash
 
-Don't run `init.bash` more than once. If your initialization doesn't work properly, ping `@alittleclarity` on the BH24 TIL-AI Discord server in your team's private channel.
+Don't run `init.bash` more than once. If your initialization doesn't work properly, ping `@tech` on the BH24 TIL-AI Discord server in your team's private channel.
 
 #### GCP Auth Credentials
 
-By default, the Vertex AI instances are set up to use the auth credentials of your team's GCP service account, which all the subsequent automations and permissions depends on. You can check which credentials you are using by running `gcloud auth list`. If you've set up additional credentials (e.g. by using `gcloud auth login`), your model submission commands may not work properly. You can switch which credentials are active using the `gcloud config set account svc-TEAM-NAME@dsta-angelhack.iam.gserviceaccount.com` command, replacing `TEAM-NAME` with your team name.
+By default, the Vertex AI instances are set up to use the auth credentials of your team's GCP service account, which all the subsequent automations and permissions depends on. You can check which credentials you are using by running `gcloud auth list`. If you've set up additional credentials (e.g. by using `gcloud auth login`), your model submission commands may not work properly. You can switch which credentials are active using the `gcloud config set account svc-TEAM-NAME@til-ai-2025.iam.gserviceaccount.com` command, replacing `TEAM-NAME` with your team name.
 
 #### Loading JupyterLab
 
@@ -189,7 +191,7 @@ Sometimes loading the JupyterLab environment can fail or get stuck. Forcing a ha
 
 #### NVIDIA Driver Not Recognized
 
-Sometimes the NVIDIA drivers stop being recognized on the instance. You can see this when you run the `nvidia-smi` command. If this happens, ping @alittleclarity on Discord, but here are some steps you can follow to possibly resolve this issue.
+Sometimes the NVIDIA drivers stop being recognized on the instance. You can see this when you run the `nvidia-smi` command. If this happens, ping `@tech` on Discord, but here are some steps you can follow to possibly resolve this issue.
 
 ```bash
 sudo apt-get purge nvidia-*
