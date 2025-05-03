@@ -1,7 +1,8 @@
 # example deep learning VM
 # for a full list see us-docker.pkg.dev/deeplearning-platform-release/gcr.io/
 # and for details see https://cloud.google.com/deep-learning-vm/docs/images#supported-frameworks
-FROM us-docker.pkg.dev/deeplearning-platform-release/gcr.io/pytorch-gpu.2-2.py310
+# FROM us-docker.pkg.dev/deeplearning-platform-release/gcr.io/pytorch-gpu.2-2.py310
+FROM python:3.12-slim
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -24,4 +25,4 @@ RUN pip install -r requirements.txt
 COPY src .
 
 # start model service
-CMD uvicorn api_service:app --port 5004 --host 0.0.0.0
+CMD uvicorn api_service:app --port 5002 --host 0.0.0.0

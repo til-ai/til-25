@@ -29,7 +29,7 @@ async def ocr(instance: Request):
         # each is a dict with one key "b64" and the value as a b64 encoded string
         image_bytes = base64.b64decode(instance["b64"])
 
-        bbox = ocr_manager.identify(image_bytes, instance["caption"])
-        predictions.append(bbox)
+        text = ocr_manager.ocr(image_bytes)
+        predictions.append(text)
 
     return {"predictions": predictions}
