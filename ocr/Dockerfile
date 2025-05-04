@@ -25,4 +25,4 @@ RUN pip install -r requirements.txt
 COPY src .
 
 # start model service
-CMD uvicorn api_service:app --port 5002 --host 0.0.0.0
+CMD uvicorn ocr_server:app --port 5002 --host 0.0.0.0

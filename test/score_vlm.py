@@ -34,7 +34,7 @@ def bb_iou(bb1: None | list[int], bb2: list[int]) -> int:
     # compute the area of intersection rectangle
     interArea = abs(max((xB - xA, 0)) * max((yB - yA), 0))
     if interArea == 0:
-        return 0.0
+        return 0
     # compute the area of both the prediction and ground-truth
     # rectangles
     boxAArea = abs((boxA[2] - boxA[0]) * (boxA[3] - boxA[1]))

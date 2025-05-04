@@ -37,7 +37,7 @@ There is also a direction value provided:
 | 2     | left    |
 | 3     | up      |
 
-There is also a 0-1 value representing whether the agent is currently a scout or a guard.
+There is also a 0-1 value representing whether the agent is currently a scout or a guard. This won't change within a round.
 
 | value | meaning |
 | ----- | ------- |

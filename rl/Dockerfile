@@ -15,11 +15,11 @@ RUN pip install -U pip
 WORKDIR /workspace
 
 # install other requirements
-COPY docker-requirements.txt .
-RUN pip install -r docker-requirements.txt
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 # copy the rest of the files into the container
 COPY src .
 
 # start model service
-CMD uvicorn api_service:app --port 5000 --host 0.0.0.0
+CMD uvicorn rl_server:app --port 5000 --host 0.0.0.0

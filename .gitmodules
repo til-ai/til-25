@@ -1,6 +1,3 @@
-[submodule "til-24-curriculum"]
-	path = til-24-curriculum
-	url = https://github.com/TIL-24/til-24-curriculum/
 [submodule "til-25-finals"]
 	path = til-25-finals
 	url = https://github.com/til-ai/til-25-finals/

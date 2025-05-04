@@ -8,7 +8,7 @@ import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from scoring.asr_eval import asr_eval
+from .score_asr import asr_eval
 
 load_dotenv()
 
@@ -52,7 +52,7 @@ def run_batched(
     for index in tqdm(range(0, len(instances), batch_size)):
         _instances = instances[index : index + batch_size]
         response = requests.post(
-            "http://localhost:5001/stt",
+            "http://localhost:5001/asr",
             data=json.dumps(
                 {
                     "instances": [

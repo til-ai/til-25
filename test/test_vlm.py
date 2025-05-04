@@ -8,7 +8,7 @@ import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from scoring.vlm_eval import vlm_eval
+from .score_vlm import vlm_eval
 
 load_dotenv()
 
@@ -70,7 +70,7 @@ def run_batched(
     for index in tqdm(range(0, len(instances), batch_size)):
         _instances = instances[index : index + batch_size]
         response = requests.post(
-            "http://localhost:5004/identify",
+            "http://localhost:5004/vlm",
             data=json.dumps(
                 {
                     "instances": [

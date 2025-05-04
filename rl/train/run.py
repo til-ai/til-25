@@ -1,4 +1,4 @@
-from til_ai_25_env import gridworld
+from .environment import gridworld
 
 env = gridworld.env(render_mode="human")
 env.reset(seed=42)
