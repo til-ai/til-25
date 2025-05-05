@@ -23,4 +23,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src .
 
 # Starts your model server.
-CMD uvicorn ocr_server:app --port 5002 --host 0.0.0.0
+CMD uvicorn ocr_server:app --port 5003 --host 0.0.0.0
