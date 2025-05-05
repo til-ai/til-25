@@ -39,7 +39,7 @@ You'll also find a final subdirectory, [`test/`](/test). This contains tools to 
 
 Submitting your model for evaluation is simple: just build your Docker image and push it! You can find a more detailed tutorial in the [Wiki](). (TK link)
 
-You'll first want to `cd` into the directory you want to build. Then, build the image using Docker, remembering to tag it with your team name and the challenge type. Finally, run `til submit` to submit your image for evaluation.
+You'll first want to `cd` into the directory you want to build. Then, build the image using Docker with an image name and (optionally) an image tag. Finally, run `til submit` to submit your image for evaluation.
 
 ```bash
 
@@ -47,12 +47,12 @@ You'll first want to `cd` into the directory you want to build. Then, build the 
 cd CHALLENGE
 
 # Build your image. Remember the . at the end.
-docker build -t <TEAM_NAME>-<CHALLENGE>:<TAG> .
+docker build -t TEAM_NAME-CHALLENGE:TAG .
 
 # Optionally, you can run your model and test it here.
 
 # Push it for submission
-til submit asr <TEAM_NAME>-<CHALLENGE>:<TAG>
+til submit asr TEAM_NAME-CHALLENGE:TAG
 ```
 
 ## Links
