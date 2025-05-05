@@ -1,6 +1,6 @@
 # DSTA BrainHack TIL-AI 2025
 
-<img src="https://static.wixstatic.com/media/b03c31_bdb8962d37364d7c8cc3e6ae234bb172~mv2.png/v1/crop/x_0,y_1,w_3392,h_1453/fill/w_3310,h_1418,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/Brainhack%20KV_v12_FOR_WEB.png">
+![Banner for TIL-AI](https://static.wixstatic.com/media/b03c31_bdb8962d37364d7c8cc3e6ae234bb172~mv2.png/v1/crop/x_0,y_1,w_3392,h_1453/fill/w_3310,h_1418,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/Brainhack%20KV_v12_FOR_WEB.png)
 
 **Contents**
 * [Get started](#get-started)
@@ -41,20 +41,18 @@ Submitting your model for evaluation is simple: just build your Docker image and
 
 You'll first want to `cd` into the directory you want to build. Then, build the image using Docker, remembering to tag it with your team name and the challenge type. Finally, run `til submit` to submit your image for evaluation.
 
-**can they just use `docker build -t teamname-asr asr/`?**
-
 ```bash
 
 # cd into the directory. For example, `cd ./asr/`
 cd CHALLENGE
 
 # Build your image. Remember the . at the end.
-docker build -t TEAM_NAME-CHALLENGE .
+docker build -t <TEAM_NAME>-<CHALLENGE>:<TAG> .
 
 # Optionally, you can run your model and test it here.
 
 # Push it for submission
-til submit asr TEAM_NAME-CHALLENGE:TAG
+til submit asr <TEAM_NAME>-<CHALLENGE>:<TAG>
 ```
 
 ## Links

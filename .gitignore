@@ -1,5 +1,9 @@
-models/
-results/
+# .gitignore tells Git not to track these files.
+
+
+# Large files like model weights, training data, and results should be ignored.
+**/models/
+**/results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
