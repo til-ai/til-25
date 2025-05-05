@@ -23,4 +23,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src .
 
 # Starts your model server.
-CMD uvicorn cv_server:app --port 5003 --host 0.0.0.0
+CMD uvicorn cv_server:app --port 5001 --host 0.0.0.0
