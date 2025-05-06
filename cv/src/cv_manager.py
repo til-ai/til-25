@@ -1,7 +1,7 @@
 """Manages the CV model."""
 
 
-from typing import Any, Dict, List
+from typing import Any
 
 
 class CVManager:
@@ -11,7 +11,7 @@ class CVManager:
         # configurations.
         pass
 
-    def cv(self, image: bytes) -> List[Dict[str, Any]]:
+    def cv(self, image: bytes) -> list[dict[str, Any]]:
         """Performs object detection on an image.
 
         Args:

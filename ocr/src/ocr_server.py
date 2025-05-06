@@ -14,7 +14,7 @@ manager = OCRManager()
 
 
 @app.post("/ocr")
-async def ocr(request: Request):
+async def ocr(request: Request) -> dict[str, list[str]]:
     """Performs OCR on images of documents.
 
     Args:
@@ -42,6 +42,6 @@ async def ocr(request: Request):
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     """Health check endpoint for your model."""
     return {"message": "health ok"}

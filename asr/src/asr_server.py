@@ -42,6 +42,6 @@ async def asr(request: Request) -> dict[str, list[str]]:
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     """Health check endpoint for the server."""
     return {"message": "health ok"}

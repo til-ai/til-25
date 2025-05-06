@@ -4,6 +4,7 @@
 # to change anything in this file.
 
 
+from typing import Any
 from fastapi import FastAPI, Request
 from .rl_manager import RLManager
 
@@ -12,7 +13,7 @@ manager = RLManager()
 
 
 @app.post("/rl")
-async def rl(request: Request):
+async def rl(request: Request) -> dict[str, Any]:
     """Feeds an observation into the RL model.
 
     Returns action taken given current observation (int)
@@ -44,6 +45,6 @@ async def reset(_: Request):
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     """Health check function for your model."""
     return {"message": "health ok"}

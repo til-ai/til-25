@@ -35,15 +35,20 @@ Your route handler function must return a `dict` with this structure:
 ```Python
 {
     "predictions": [
-        {
-            "bbox": [x, y, w, h],
-            "category_id": category_id
-        },
+        [
+            {
+                "bbox": [x, y, w, h],
+                "category_id": category_id
+            },
+            ...
+        ],
         ...
     ]
 }
 ```
 
-Where `x`, `y`, `w`, `h`, and `category_id` are of type `int`, and represent the coordinates, dimensions, and predicted category of the detected object. See the [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications) in the Wiki for the meaning of each parameter.
+Where `x`, `y`, `w`, `h`, and `category_id` are of type `int`, representing the coordinates, dimensions, and predicted category of each detected object. See the [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications) in the Wiki for the meaning of each parameter.
+
+Your model is expected to output predictions for every object (of which there may be zero, one, or multiple) in each image scene. If your model detects no objects in a scene, your handler should output an empty list for the corresponding prediction.
 
 The order of predictions in `"predictions"` must be the same as the order of objects in the `"instances"` object in the input JSON. There must be one prediction for every input.

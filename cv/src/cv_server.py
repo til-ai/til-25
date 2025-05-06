@@ -5,7 +5,10 @@
 
 
 import base64
+from typing import Any
+
 from fastapi import FastAPI, Request
+
 from .cv_manager import CVManager
 
 
@@ -14,7 +17,7 @@ manager = CVManager()
 
 
 @app.post("/cv")
-async def cv(request: Request):
+async def cv(request: Request) -> dict[str, list[list[dict[str, Any]]]]:
     """Performs CV object detection on image frames.
 
     Args:
@@ -43,6 +46,6 @@ async def cv(request: Request):
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     """Health check endpoint for your model."""
     return {"message": "health ok"}

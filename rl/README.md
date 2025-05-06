@@ -43,4 +43,4 @@ Your route handler function must return a `dict` with this structure:
 }
 ```
 
-The action is an integer representing the next movement your agent intends to take. See the [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications) in the Wiki for the meaning of each key.
+The action is an integer representing the next movement your agent intends to take. See the [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications) in the Wiki for the possible values.
