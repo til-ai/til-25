@@ -4,7 +4,6 @@
 # to change anything in this file.
 
 
-from typing import Any
 from fastapi import FastAPI, Request
 from .rl_manager import RLManager
 
@@ -13,7 +12,7 @@ manager = RLManager()
 
 
 @app.post("/rl")
-async def rl(request: Request) -> dict[str, Any]:
+async def rl(request: Request) -> dict[str, list[dict[str, int]]]:
     """Feeds an observation into the RL model.
 
     Returns action taken given current observation (int)
@@ -30,7 +29,7 @@ async def rl(request: Request) -> dict[str, Any]:
 
 
 @app.post("/reset")
-async def reset(_: Request):
+async def reset(_: Request) -> None:
     """Resets the `RLManager` for a new round."""
 
     # The Docker container is not restarted between rounds (during Qualifiers).
