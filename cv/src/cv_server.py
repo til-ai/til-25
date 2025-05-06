@@ -10,7 +10,7 @@ from .cv_manager import CVManager
 
 
 app = FastAPI()
-cv_manager = CVManager()
+manager = CVManager()
 
 
 @app.post("/cv")
@@ -36,7 +36,7 @@ async def cv(request: Request):
         image_bytes = base64.b64decode(instance["b64"])
 
         # Performs object detection and appends the result.
-        detections = cv_manager.cv(image_bytes)
+        detections = manager.cv(image_bytes)
         predictions.append(detections)
 
     return {"predictions": predictions}

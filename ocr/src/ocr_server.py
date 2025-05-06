@@ -10,7 +10,7 @@ from .ocr_manager import OCRManager
 
 
 app = FastAPI()
-ocr_manager = OCRManager()
+manager = OCRManager()
 
 
 @app.post("/ocr")
@@ -35,7 +35,7 @@ async def ocr(request: Request):
         image_bytes = base64.b64decode(instance["b64"])
 
         # Performs OCR and appends the result.
-        text = ocr_manager.ocr(image_bytes)
+        text = manager.ocr(image_bytes)
         predictions.append(text)
 
     return {"predictions": predictions}

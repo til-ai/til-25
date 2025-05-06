@@ -9,7 +9,6 @@ fastapi
 gymnasium
 jiwer
 mazelib
-pandas
 pettingzoo
 pygame>=2.1.3
 python-dotenv
@@ -17,3 +16,7 @@ requests
 supersuit
 tqdm
 uvicorn[standard]
+
+# This is the til_environment package. You'll need this to train and test your
+# RL model. You can import this package using `import til_environment`.
+-e ./til-25-environment

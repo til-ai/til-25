@@ -1,7 +1,5 @@
 # Dockerfile for building the ASR image.
 
-# Generally, you shouldn't need to edit this.
-
 
 # The base image, an example deep learning VM.
 # For a full list, see https://us-docker.pkg.dev/deeplearning-platform-release/gcr.io/

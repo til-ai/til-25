@@ -1,7 +1,5 @@
 # Dockerfile for building the RL image.
 
-# Generally, you shouldn't need to edit this.
-
 
 # The base image. Using a regular Python base because RL agents don't typically
 # require much GPU. This will speed up your evaluation.

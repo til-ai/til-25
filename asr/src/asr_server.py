@@ -10,7 +10,7 @@ from .asr_manager import ASRManager
 
 
 app = FastAPI()
-asr_manager = ASRManager()
+manager = ASRManager()
 
 
 @app.post("/asr")
@@ -35,7 +35,7 @@ async def asr(request: Request) -> dict[str, list[str]]:
         audio_bytes = base64.b64decode(instance["b64"])
 
         # Performs ASR and appends the result.
-        transcription = asr_manager.asr(audio_bytes)
+        transcription = manager.asr(audio_bytes)
         predictions.append(transcription)
 
     return {"predictions": predictions}

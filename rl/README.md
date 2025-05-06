@@ -26,7 +26,7 @@ A 3×5 vision area centering on the agent, which can see 1 tile in each directio
 | 4          | 16    | Has right wall  |
 | 5          | 32    | Has bottom wall |
 | 6          | 64    | Has left wall   |
-| 7          | 128   | Hhas top wall   |
+| 7          | 128   | Has top wall    |
 
 There is also a direction value provided:
 

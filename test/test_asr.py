@@ -1,3 +1,6 @@
+"""Tests the ASR model."""
+
+
 import base64
 import json
 import os
@@ -9,6 +12,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from .score_asr import asr_eval
+
 
 load_dotenv()
 
