@@ -66,11 +66,11 @@ til submit TEAM_ID-CHALLENGE:TAG
 
 ## Links
 
-* Your [Vertex AI Workbench on Google Cloud Platform](https://console.cloud.google.com/vertex-ai/workbench/instances?project=til-ai-2025) is where you'll do most of your development.
-* The repo [Wiki]() (TK LINK) contains deep dives into setup guides, submission instructions, technical details, FAQs, and more.
-* The [Guardian's Handbook](https://www.notion.so/tribegroup/BrainHack-2024-TIL-AI-Guardian-s-Handbook-c5d4ec3c3bd04b0db0329884c220791f), where you can find the Leaderboard and info about the competition.
-* [Educational Content on Google Drive](https://drive.google.com/drive/folders/1JmeEwQZoqobPmUeSZWrvR5Inrw6NJ8Kr) from TIL-AI, which teaches you the basics of AI.
-* The [#hackoverflow]() (TK LINK) channel on the TIL-AI Discord channel, a forum just for Guardians like you.
+* The repo [Wiki](https://github.com/til-ai/til-25/wiki) contains tutorials, specifications, resources, and more.
+* Your [Vertex AI Workbench](https://console.cloud.google.com/vertex-ai/workbench/instances?project=til-ai-2025) on Google Cloud Platform is where you'll do most of your development.
+* The [Guardian's Handbook](https://tribegroup.notion.site/BrainHack-2025-TIL-AI-Guardian-s-Handbook-1885263ef45a80fdb547d0f22741a5ba) houses the Leaderboard and info about the competition.
+* [TIL-AI Curriculum](https://drive.google.com/drive/folders/18zP4pHt5E6YqA3usey16ETEzKNeAn5X9) on Google Drive contains educational materials specially crafted for TIL-AI/
+* The [#hackoverflow](https://discord.com/channels/1344138493357719573/1344204681110487068) channel on the TIL-AI Discord server is a forum just for Guardians like you.
 
 ---
 
