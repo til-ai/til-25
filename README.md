@@ -6,22 +6,26 @@
 - [DSTA BrainHack TIL-AI 2025](#dsta-brainhack-til-ai-2025)
   - [Get started](#get-started)
   - [Understanding this repo](#understanding-this-repo)
-  - [Building and submitting](#building-and-submitting)
+  - [Build, test, and submit](#build-test-and-submit)
   - [Links](#links)
 
 ## Get started
 
-Here's a quick overview of the initial setup instructions. You can find a more detailed tutorial, including advanced usage for power users, in the [Wiki](). (TK link)
+Here's a quick overview of the initial setup instructions. You can find a more detailed tutorial, including advanced usage for power users, in the [Wiki](https://github.com/til-ai/til-25/wiki).
 
 Use this repository as a template to create your own, and clone it into your Vertex AI workbench. You'll want to keep your repository private, so you'll need to [create a GitHub Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
 
-After pulling your repo, you can set up your environment. We suggest creating a Python virtual environment (or even several). Then, install the development dependencies.
+You'll also need to initialize the Git submodules:
+
+```bash
 git submodule update --init
+```
+
+Finally, create a Python virtual environment and install the development dependencies.
+
 ```bash
 pip install -r requirements-dev.txt
 ```
-
-
 
 ## Understanding this repo
 
@@ -31,18 +35,18 @@ There's a subdirectory for each challenge: [`asr/`](/asr), [`cv/`](/cv), [`ocr/`
   * `*_manager.py`, which manages your model. This is where your inference and computation takes place.
   * `*_server.py`, which runs a local web server that talks to the rest of the competition infrastructure.
 * `Dockerfile`, which is used to build your Docker image for each model.
-* `requirements.txt`, which lists the dependencies you need bundled into your Docker image.
+* `requirements.txt`, which lists the dependencies you need to have bundled into your Docker image.
 * `README.md`, which contains specifications for the format of each challenge.
 
-The `rl/` directory has an additional folder, [`train/`](/rl/train/). You can use the code here to train your RL model; see [`rl/README.md`](/rl/README.md) for instructions.
+You'll also find a final subdirectory, [`test/`](/test). This contains tools to test and score your model locally.
 
-You'll also find a final subdirectory, [`test/`](/test). This contains tools to test your model locally and score it against the test dataset.
+There are also two Git submodules, `til-25-finals` and `til-25-environment`. `finals` contains code that will be pulled into your repo for Semifinals and Finals. `environment` contains the `til_environment` package, which will help you train and test your RL model, and is installed by pip during setup. Don't delete or modify the contents of `til-25-finals/`, `til-25-environment/`, or `.gitmodules`.
 
-## Building and submitting
+## Build, test, and submit
 
-Submitting your model for evaluation is simple: just build your Docker image and push it! You can find a more detailed tutorial, including advanced usage for power users, in the [Wiki](). (TK link)
+Submitting your model for evaluation is simple: just build your Docker image, test it, and submit. You can find a more detailed tutorial, including advanced usage for power users, in the [Wiki](https://github.com/til-ai/til-25/wiki).
 
-You'll first want to `cd` into the directory you want to build. Then, build the image using Docker with an image name and (optionally) an image tag. Finally, run `til submit` to submit your image for evaluation.
+You'll first want to `cd` into the directory you want to build. Then, build the image using Docker, following the naming scheme below. You should then run and test your model before using `til submit` to submit your image for evaluation.
 
 ```bash
 
@@ -52,7 +56,9 @@ cd CHALLENGE
 # Build your image. Remember the . at the end.
 docker build -t TEAM_ID-CHALLENGE:TAG .
 
-# Optionally, you can run your model and test it here.
+# Optionally, you can run your model locally to test it.
+docker run -p PORT --gpus all -d IMAGE_NAME:TAG
+python test/test_CHALLENGE.py
 
 # Push it for submission
 til submit TEAM_ID-CHALLENGE:TAG
