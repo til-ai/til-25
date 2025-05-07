@@ -69,7 +69,7 @@ til submit TEAM_ID-CHALLENGE:TAG
 * The repo [Wiki](https://github.com/til-ai/til-25/wiki) contains tutorials, specifications, resources, and more.
 * Your [Vertex AI Workbench](https://console.cloud.google.com/vertex-ai/workbench/instances?project=til-ai-2025) on Google Cloud Platform is where you'll do most of your development.
 * The [Guardian's Handbook](https://tribegroup.notion.site/BrainHack-2025-TIL-AI-Guardian-s-Handbook-1885263ef45a80fdb547d0f22741a5ba) houses the Leaderboard and info about the competition.
-* [TIL-AI Curriculum](https://drive.google.com/drive/folders/18zP4pHt5E6YqA3usey16ETEzKNeAn5X9) on Google Drive contains educational materials specially crafted for TIL-AI/
+* [TIL-AI Curriculum](https://drive.google.com/drive/folders/18zP4pHt5E6YqA3usey16ETEzKNeAn5X9) on Google Drive contains educational materials specially crafted for TIL-AI.
 * The [#hackoverflow](https://discord.com/channels/1344138493357719573/1344204681110487068) channel on the TIL-AI Discord server is a forum just for Guardians like you.
 
 ---
