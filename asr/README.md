@@ -22,7 +22,7 @@ The input is a JSON object with this structure:
 }
 ```
 
-The `"b64"` key of each object in `"instances"` contains a base-64 encoded audio file in the WAV format at a sampling rate of 16 kHz. The audio is English speech to be transcribed.
+The `"b64"` key of each object in `"instances"` contains a base-64 encoded WAV audio file, single channel, sampled at 16 kHz. The audio is English speech to be transcribed.
 
 The length of the `"instances"` array is indeterminate.
 
@@ -41,4 +41,4 @@ Your route handler function must return a `dict` with this structure:
 
 Each string in `"predictions"` is the ASR transcription for the corresponding audio file.
 
-The order of predictions in `"predictions"` must be the same as the order of objects in the `"instances"` object in the input JSON. There must be one prediction for every input.
+The order of predictions in `"predictions"` must match the order in the `"instances"` object in the input JSON. There must be one prediction for every input.

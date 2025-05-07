@@ -40,4 +40,4 @@ Your route handler function must return a `dict` with this structure:
 
 Each string in `"predictions"` is the OCR prediction for the corresponding image.
 
-The order of predictions in `"predictions"` must be the same as the order of objects in the `"instances"` object in the input JSON. There must be one prediction for every input.
+The order of predictions in `"predictions"` must match the order in the `"instances"` object in the input JSON. There must be one prediction for every input.

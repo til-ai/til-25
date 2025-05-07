@@ -24,7 +24,7 @@ The input is a JSON object with this structure:
 
 <!-- TODO: Check if this is still correct, and delete this comment. -->
 
-The `"b64"` key of each object in `"instances"` contains a base-64 encoded image in JPG format, at a size of 1520 by 870 pixels (width by height), with 3-channel 8-bit color depth. The image is a scene in which to perform object detection and classification.
+The `"b64"` key of each object in `"instances"` contains a base-64 encoded JPG image, at a size of 1520 by 870 pixels (width by height), with 3-channel (RGB) 8-bit color depth. The image is a scene in which to perform object detection and classification.
 
 The length of the `"instances"` array is indeterminate.
 
@@ -51,4 +51,4 @@ Where `x`, `y`, `w`, `h`, and `category_id` are of type `int`, representing the 
 
 Your model is expected to output predictions for every object (of which there may be zero, one, or multiple) in each image scene. If your model detects no objects in a scene, your handler should output an empty list for the corresponding prediction.
 
-The order of predictions in `"predictions"` must be the same as the order of objects in the `"instances"` object in the input JSON. There must be one prediction for every input.
+The order of predictions in `"predictions"` must match the order in the `"instances"` object in the input JSON. There must be one prediction for every input.

@@ -1,6 +1,6 @@
 # RL
 
-Your RL challenge is to command your agent through the game map while interacting with other agents and completing challenges.
+Your RL challenge is to direct your agent through the game map while interacting with other agents and completing challenges.
 
 This Readme provides a brief overview of the interface format; see the Wiki for the full [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications).
 
@@ -28,6 +28,8 @@ The input is a JSON object with this structure:
 The observation is a representation of the inputs the agent senses in its environment. See the [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications) in the Wiki for the meaning of each key.
 
 The length of the `"instances"` array is 1.
+
+During evaluation for Qualifiers, a GET request will be sent to the `/reset` route to signal that a round has ended, all agents are being reset to their starting positions (possibly with new roles), and any persistent state information your code may have stored must be cleared.
 
 ## Output
 
