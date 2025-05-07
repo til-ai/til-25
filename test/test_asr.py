@@ -1,3 +1,6 @@
+"""Tests the ASR model."""
+
+
 import base64
 import json
 import os
@@ -8,7 +11,8 @@ import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from scoring.vlm_eval import vlm_eval
+from .score_asr import asr_eval
+
 
 load_dotenv()
 
@@ -19,47 +23,29 @@ TEAM_TRACK = os.getenv("TEAM_TRACK")
 def main():
     input_dir = Path(f"/home/jupyter/{TEAM_TRACK}")
     results_dir = Path(f"/home/jupyter/{TEAM_NAME}")
-
     results_dir.mkdir(parents=True, exist_ok=True)
     instances = []
-    truths = []
-    counter = 0
 
-    with open(input_dir / "vlm.jsonl", "r") as f:
+    with open(input_dir / "asr.jsonl", "r") as f:
         for line in f:
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
-            with open(input_dir / "images" / instance["image"], "rb") as file:
-                image_bytes = file.read()
-                for annotation in instance["annotations"]:
-                    instances.append(
-                        {
-                            "key": counter,
-                            "caption": annotation["caption"],
-                            "b64": base64.b64encode(image_bytes).decode("ascii"),
-                        }
-                    )
-                    truths.append(
-                        {
-                            "key": counter,
-                            "caption": annotation["caption"],
-                            "bbox": annotation["bbox"],
-                        }
-                    )
-                    counter += 1
+            with open(input_dir / "audio" / instance["audio"], "rb") as file:
+                audio_bytes = file.read()
+                instances.append(
+                    {**instance, "b64": base64.b64encode(audio_bytes).decode("ascii")}
+                )
 
-    assert len(truths) == len(instances)
     results = run_batched(instances)
     df = pd.DataFrame(results)
-    assert len(truths) == len(results)
-    df.to_csv(results_dir / "vlm_results.csv", index=False)
+    df.to_csv(results_dir / "asr_results.csv", index=False)
     # calculate eval
-    eval_result = vlm_eval(
-        [truth["bbox"] for truth in truths],
-        [result["bbox"] for result in results],
+    eval_result = asr_eval(
+        [result["transcript"] for result in results],
+        [result["prediction"] for result in results],
     )
-    print(f"IoU@0.5: {eval_result}")
+    print(f"1-WER: {eval_result}")
 
 
 def run_batched(
@@ -70,11 +56,11 @@ def run_batched(
     for index in tqdm(range(0, len(instances), batch_size)):
         _instances = instances[index : index + batch_size]
         response = requests.post(
-            "http://localhost:5004/identify",
+            "http://localhost:5001/asr",
             data=json.dumps(
                 {
                     "instances": [
-                        {field: _instance[field] for field in ("key", "caption", "b64")}
+                        {"key": _instance["key"], "b64": _instance["b64"]}
                         for _instance in _instances
                     ]
                 }
@@ -85,7 +71,8 @@ def run_batched(
             [
                 {
                     "key": _instances[i]["key"],
-                    "bbox": _results[i],
+                    "transcript": _instances[i]["transcript"],
+                    "prediction": _results[i],
                 }
                 for i in range(len(_instances))
             ]

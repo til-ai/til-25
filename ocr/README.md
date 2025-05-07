@@ -1,20 +1,43 @@
 # OCR
 
-TODO! update example jpg
+Your OCR challenge is to read text in a scanned document.
+
+This Readme provides a brief overview of the interface format; see the Wiki for the full [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications).
 
 ## Input
 
-Scanned document image provided as a 2481×3544 grayscale JPG files.
-![example document image](example.jpg)
+The input is sent via a POST request to the `/ocr` route on port `5003`.
+
+The input is a JSON object with this structure:
+
+```JSON
+{
+  "instances": [
+    {
+      "key": 0,
+      "b64": "BASE64_ENCODED_IMAGE"
+    }
+  ]
+}
+```
+
+The `"b64"` key of each object in `"instances"` contains a base-64 encoded image in JPG format, at a size of 2481 by 3544 pixels (width by height), with single-channel (grayscale) 8-bit color depth. The image is a scan of a document with text.
+
+The length of the `"instances"` array is indeterminate.
 
 ## Output
 
-Text contained within the document.
+Your route handler function must return a `dict` with this structure:
 
-## Training Data
+```Python
+{
+    "predictions": [
+        "Predicted transcript one.",
+        "Predicted transcript two."
+    ]
+}
+```
 
-Provided with each image are also word/line/paragraph bounding boxes for use in training your OCR models. These are provided in `hocr` format, but they should be readily convertable to other formats as necessary.
+Each string in `"predictions"` is the OCR prediction for the corresponding image.
 
-### hOCR format
-
-See the [Wikipedia article on the hOCR format](https://en.wikipedia.org/wiki/HOCR) for additional details.
+The order of predictions in `"predictions"` must match the order in the `"instances"` object in the input JSON. There must be one prediction for every input.

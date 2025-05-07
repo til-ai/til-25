@@ -1,4 +1,8 @@
+"""Scoring function for ASR."""
+
+
 import jiwer
+
 
 wer_transforms = jiwer.Compose(
     [

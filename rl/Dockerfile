@@ -1,25 +1,23 @@
-# using base python image bc RL agents don't often use much gpu
+# Dockerfile for building the RL image.
+
+
+# The base image. Using a regular Python base because RL agents don't typically
+# require much GPU. This will speed up your evaluation.
 FROM --platform=linux/amd64 python:3.11-slim
 
-# Keeps Python from generating .pyc files in the container
+# Configures settings for the image.
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
-
-# pip gives a warning if you install packages as root
-# set this flag to just ignore the warning
 ENV PIP_ROOT_USER_ACTION=ignore
-
-RUN pip install -U pip
 WORKDIR /workspace
 
-# install other requirements
-COPY docker-requirements.txt .
-RUN pip install -r docker-requirements.txt
+# Installs your dependencies.
+RUN pip install -U pip
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# copy the rest of the files into the container
+# Copies your source files.
 COPY src .
 
-# start model service
-CMD uvicorn api_service:app --port 5000 --host 0.0.0.0
+# Starts your model server.
+CMD uvicorn rl_server:app --port 5004 --host 0.0.0.0

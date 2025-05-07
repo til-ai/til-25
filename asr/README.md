@@ -1,15 +1,44 @@
 # ASR
 
-TODO! update sample audio file
+Your ASR challenge is to transcribe a noisy recording of speech.
+
+This Readme provides a brief overview of the interface format; see the Wiki for the full [challenge specifications](https://github.com/til-ai/til-25/wiki/Challenge-specifications).
 
 ## Input
 
-Audio file provided in `.WAV` format with a sample rate of 16 kHz.
+The input is sent via a POST request to the `/asr` route on port `5001`.
 
-https://github.com/TIL-24/til-24-base/assets/162278270/5e42363d-9f01-4626-8d70-cc7dc8e48c71
+The input is a JSON object with this structure:
 
-Note that the above example is in `mp4` format as GitHub does not support embedding `.wav` files in README files. However, audio files provided on GCP will be `.wav` files.
+```JSON
+{
+  "instances": [
+    {
+      "key": 0,
+      "b64": "BASE64_ENCODED_AUDIO"
+    },
+    ...
+  ]
+}
+```
+
+The `"b64"` key of each object in `"instances"` contains a base-64 encoded WAV audio file, single channel, sampled at 16 kHz. The audio is English speech to be transcribed.
+
+The length of the `"instances"` array is indeterminate.
 
 ## Output
 
-Transcription of audio file. Example: `"Heading is one five zero, target is green commercial aircraft, tool to deploy is electromagnetic pulse."`
+Your route handler function must return a `dict` with this structure:
+
+```Python
+{
+    "predictions": [
+        "Predicted transcript.",
+        ...
+    ]
+}
+```
+
+Each string in `"predictions"` is the ASR transcription for the corresponding audio file.
+
+The order of predictions in `"predictions"` must match the order in the `"instances"` object in the input JSON. There must be one prediction for every input.

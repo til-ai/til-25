@@ -1,7 +1,4 @@
-gymnasium
-pygame>=2.1.3
-pettingzoo
-mazelib
-supersuit
+# Dependencies for RL.
+
 fastapi
 uvicorn[standard]
