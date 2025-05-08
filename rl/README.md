@@ -10,15 +10,15 @@ The input is sent via a POST request to the `/rl` route on port `5004`.
 
 The input is a JSON object with this structure:
 
-<!-- TODO: update this and delete this comment. -->
-
 ```JSON
 {
   "instances": [
     {
       "observation": {
-        "ryan": 0,
-        "todo": "this"
+        "viewcone": [ [0, 0, ..., 0], [0, 0, ..., 0], ... , [0, 0, ..., 0] ],
+        "direction": 0,
+        "scout": 1,
+        "location": [0, 0]
       }
     }
   ]

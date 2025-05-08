@@ -5,7 +5,7 @@
 
 
 from fastapi import FastAPI, Request
-from .rl_manager import RLManager
+from rl_manager import RLManager
 
 app = FastAPI()
 manager = RLManager()
@@ -22,7 +22,7 @@ async def rl(request: Request) -> dict[str, list[dict[str, int]]]:
     input_json = await request.json()
 
     predictions = []
-    # each is a dict with one key "observation" and the value as a list of ints
+    # each is a dict with one key "observation" and the value as a dictionary observation
     for instance in input_json["instances"]:
         predictions.append({"action": manager.rl(instance["observation"])})
     return {"predictions": predictions}
@@ -37,7 +37,7 @@ async def reset(_: Request) -> None:
     # should avoid storing persistent state information outside your
     # `RLManager` instance; but if you must, you should also reset it here.
 
-    global manager                        # pylint: disable=global-statement
+    global manager  # pylint: disable=global-statement
     manager = RLManager()
 
     return

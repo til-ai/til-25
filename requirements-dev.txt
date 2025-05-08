@@ -6,14 +6,9 @@
 
 
 fastapi
-gymnasium
 jiwer
-mazelib
-pettingzoo
-pygame>=2.1.3
 python-dotenv
 requests
-supersuit
 tqdm
 uvicorn[standard]
 

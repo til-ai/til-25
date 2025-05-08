@@ -5,9 +5,9 @@
 
 
 import base64
-from fastapi import FastAPI, Request
-from .ocr_manager import OCRManager
 
+from fastapi import FastAPI, Request
+from ocr_manager import OCRManager
 
 app = FastAPI()
 manager = OCRManager()
