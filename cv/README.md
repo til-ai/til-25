@@ -22,9 +22,7 @@ The input is a JSON object with this structure:
 }
 ```
 
-<!-- TODO: Check if this is still correct, and delete this comment. -->
-
-The `"b64"` key of each object in `"instances"` contains a base-64 encoded JPG image, at a size of 1520 by 870 pixels (width by height), with 3-channel (RGB) 8-bit color depth. The image is a scene in which to perform object detection and classification.
+The `"b64"` key of each object in `"instances"` contains a base-64 encoded JPG image, at a size of 1920 by 1080 pixels (width by height), with 3-channel (RGB) 8-bit color depth. The image is a scene in which to perform object detection and classification.
 
 The length of the `"instances"` array is indeterminate.
 
