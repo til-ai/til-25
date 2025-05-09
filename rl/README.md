@@ -15,10 +15,10 @@ The input is a JSON object with this structure:
   "instances": [
     {
       "observation": {
-        "viewcone": [ [0, 0, ..., 0], [0, 0, ..., 0], ... , [0, 0, ..., 0] ],
+        "viewcone": [[0, 0, ..., 0], [0, 0, ..., 0], ... , [0, 0, ..., 0]],
         "direction": 0,
-        "scout": 1,
-        "location": [0, 0]
+        "location": [0, 0],
+        "scout": 0
       }
     }
   ]
