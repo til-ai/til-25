@@ -1,0 +1,19 @@
+# Development dependencies for testing and training locally.
+
+# You can add dependencies here if they're only going to be used locally. If
+# you need a dependency to be available in your Docker container for
+# evaluation, add it to requirements.txt inside the corresponding folder.
+
+
+fastapi
+jiwer
+python-dotenv
+requests
+tqdm
+pycocotools
+uvicorn[standard]
+pandas
+
+# This is the til_environment package. You'll need this to train and test your
+# RL model. You can import this package using `import til_environment`.
+-e ./til-25-environment
