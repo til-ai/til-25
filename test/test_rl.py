@@ -39,6 +39,7 @@ def main(novice: bool):
                     "http://localhost:5004/rl",
                     data=json.dumps({"instances": [{"observation": observation}]}),
                 )
+                print("RESPONSE" , response.json())
                 predictions = response.json()["predictions"]
 
                 action = int(predictions[0]["action"])
@@ -52,4 +53,4 @@ def main(novice: bool):
 
 
 if __name__ == "__main__":
-    main(TEAM_TRACK == "novice")
+    main(False)

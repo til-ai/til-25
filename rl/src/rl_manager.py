@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from flask import Flask, request, jsonify
 import random
 
 # --- Configuration ---
@@ -53,7 +52,7 @@ class RLManager:
     The Reinforcement Learning Agent.
     It processes observations, uses a DQN to select actions, and can be reset.
     """
-    def __init__(self, model_path=None):
+    def __init__(self, model_path="agent_66k_eps.pth"):
         """
         Initializes the RL Agent.
         Args:
@@ -195,7 +194,7 @@ class RLManager:
 
         return torch.tensor(processed_features, dtype=torch.float32, device=self.device).unsqueeze(0) # Add batch dimension
 
-    def select_action(self, observation_dict):
+    def rl(self, observation_dict):
         """Selects an action based on the current observation.
         Uses epsilon-greedy for exploration if epsilon > 0, otherwise greedy.
         Args:
@@ -213,18 +212,6 @@ class RLManager:
                 q_values = self.model(state_tensor)
                 action = torch.argmax(q_values, dim=1).item() # Get the action with the highest Q-value
                 return action
-
-    def reset(self):
-        """
-        Resets any persistent state information in the agent.
-        For this stateless DQN inference agent, this might not do much.
-        If using RNN layers or episodic memory, clear them here.
-        """
-        print("Agent state reset.")
-        # Example: if self.model has recurrent layers, reset hidden states:
-        # if hasattr(self.model, 'reset_hidden_states'):
-        #     self.model.reset_hidden_states()
-        pass
 
 
 
