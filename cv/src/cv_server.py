@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI, Request
 
-from .cv_manager import CVManager
+from cv_manager import CVManager
 
 
 app = FastAPI()

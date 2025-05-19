@@ -1,15 +1,12 @@
 """Runs the OCR server."""
-
-# Unless you want to do something special with the server, you shouldn't need
-# to change anything in this file.
-
-
 import base64
-
 from fastapi import FastAPI, Request
-from ocr_manager import OCRManager
+# Assuming ocr_manager.py is in the same directory (src/)
+from .ocr_manager import OCRManager # Use relative import if ocr_manager is in the same package/dir
 
 app = FastAPI()
+# Initialize the manager when the application starts.
+# This will load PaddleOCR models into memory.
 manager = OCRManager()
 
 
@@ -25,15 +22,27 @@ async def ocr(request: Request) -> dict[str, list[str]]:
         A `dict` with a single key, `"predictions"`, mapping to a `list` of
         `str` document text, in the same order as which appears in `request`.
     """
+    try:
+        inputs_json = await request.json()
+    except Exception as e:
+        return {"error": f"Invalid JSON payload: {str(e)}"}
 
-    inputs_json = await request.json()
+    if "instances" not in inputs_json or not isinstance(inputs_json["instances"], list):
+        return {"error": "Missing or invalid 'instances' field in JSON payload."}
 
     predictions = []
     for instance in inputs_json["instances"]:
-
-        # Reads the base-64 encoded image and decodes it into bytes.
-        image_bytes = base64.b64decode(instance["b64"])
-
+        if not isinstance(instance, dict) or "b64" not in instance:
+            predictions.append("Error: Invalid instance format, missing 'b64' key.")
+            continue
+        
+        try:
+            # Reads the base-64 encoded image and decodes it into bytes.
+            image_bytes = base64.b64decode(instance["b64"])
+        except Exception as e:
+            predictions.append(f"Error: Could not decode base64 string: {str(e)}")
+            continue
+        
         # Performs OCR and appends the result.
         text = manager.ocr(image_bytes)
         predictions.append(text)
@@ -44,4 +53,8 @@ async def ocr(request: Request) -> dict[str, list[str]]:
 @app.get("/health")
 def health() -> dict[str, str]:
     """Health check endpoint for your model."""
-    return {"message": "health ok"}
+    # You could add a simple OCR test here if manager is initialized
+    if manager and hasattr(manager, 'ocr_engine') and manager.ocr_engine:
+        return {"message": "health ok, OCRManager initialized"}
+    else:
+        return {"message": "health warning, OCRManager not fully initialized"}
