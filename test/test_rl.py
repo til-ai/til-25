@@ -13,16 +13,17 @@ NUM_ROUNDS = 8
 
 
 def main(novice: bool):
-    env = gridworld.env(env_wrappers=[], render_mode=None, novice=novice)
+    env = gridworld.env(env_wrappers=[], render_mode="rgb_array", novice=novice)
     # be the agent at index 0
     _agent = env.possible_agents[0]
     rewards = {agent: 0 for agent in env.possible_agents}
 
-    for _ in range(NUM_ROUNDS):
+    for rd in range(NUM_ROUNDS):
         env.reset()
         # reset endpoint
         _ = requests.post("http://localhost:5004/reset")
-
+        
+        frames = []
         for agent in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
             observation = {
@@ -47,6 +48,11 @@ def main(novice: bool):
                 # take random action from other agents
                 action = env.action_space(agent).sample()
             env.step(action)
+            # Capture rendered frame
+            frame = env.render()  # returns an RGB numpy array
+            frames.append(frame)
+        import imageio
+        imageio.mimsave(f"episode_{rd}.mp4", frames, fps=20)
     env.close()
     print(f"total rewards: {rewards[_agent]}")
     print(f"score: {rewards[_agent] / NUM_ROUNDS / 100}")
