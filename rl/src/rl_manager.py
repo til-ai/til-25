@@ -24,9 +24,9 @@ EPSILON_INFERENCE = 0.01 # Small epsilon for some exploration even during infere
 
 # --- Deep Q-Network (DQN) Model (same as in rl_agent_python_v1) ---
 # Ensure this class is defined and available
-class DQN(nn.Module):
+class DQN_3_hl(nn.Module):
     def __init__(self, input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim):
-        super(DQN, self).__init__()
+        super(DQN_3_hl, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim1)
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_dim1, hidden_dim2)
@@ -42,13 +42,29 @@ class DQN(nn.Module):
         x = self.fc4(x)
         return x
 
+# For old scout
+class DQN_2_hl(nn.Module):
+    def __init__(self, input_dim, hidden_dim1, hidden_dim2, output_dim):
+        super(DQN_2_hl, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim1)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim1, hidden_dim2)
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(hidden_dim2, output_dim)
+
+    def forward(self, x):
+        x = self.relu1(self.fc1(x))
+        x = self.relu2(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
 # --- RL Agent (Inference Only) ---
 class RLManager:
     """
     The Reinforcement Learning Agent for inference using a pre-trained model.
     It processes observations and uses a DQN to select actions.
     """
-    def __init__(self, model_path="agent03_100k_eps.pth"):
+    def __init__(self, scout_model_path="best_scout_150k_eps_595.pth", guard_model_path="guard_32k_eps_w_scout_v2.pth"):
         """
         Initialises the RL Agent.
         Args:
@@ -58,30 +74,38 @@ class RLManager:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
 
-        # Assuming these constants are defined globally or imported
-        # INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS
         try:
-             self.model = DQN(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS).to(self.device)
+            self.scout_model = DQN_2_hl(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, OUTPUT_ACTIONS).to(self.device)
+            self.guard_model = DQN_3_hl(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS).to(self.device)
         except NameError as e:
-             print(f"Error: Required constant not defined: {e}")
-             print("Please ensure INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS are defined.")
-             raise
+            print(f"Error: Required constant not defined: {e}")
+            print("Please ensure INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS are defined.")
+            raise
 
-        if model_path and os.path.exists(model_path):
+        if scout_model_path and guard_model_path and os.path.exists(scout_model_path) and os.path.exists(guard_model_path):
             try:
                 # Load the state_dict onto the correct device
-                self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-                print(f"Loaded pre-trained model from {model_path}")
+                # Scout
+                self.scout_model.load_state_dict(torch.load(scout_model_path, map_location=self.device))
+                print(f"Loaded pre-trained model from {scout_model_path}")
+                
+                # Guard
+                self.guard_model.load_state_dict(torch.load(guard_model_path, map_location=self.device))
+                print(f"Loaded pre-trained model from {guard_model_path}")
             except Exception as e:
-                print(f"Error loading model from {model_path}: {e}. Initialising with random weights.")
+                print(f"Error loading model from {scout_model_path} and {guard_model_path}: {e}. Initialising with random weights.")
                 # Fallback to random weights if loading fails or model mismatch
-                self.model.apply(self._initialise_weights)
+                self.scout_model.apply(self._initialise_weights)
+                self.guard_model.apply(self._initialise_weights)
         else:
-            print(f"No model path provided or path {model_path} does not exist. Initialising model with random weights.")
+            print(f"No model path provided or path {scout_model_path} / {guard_model_path} does not exist. Initialising model with random weights.")
             # Initialise with random weights if no path is given or file not found
-            self.model.apply(self._initialise_weights)
+            self.scout_model.apply(self._initialise_weights)
+            self.guard_model.apply(self._initialise_weights)
 
-        self.model.eval()  # Set the model to evaluation mode (disables dropout, batch norm stats etc.)
+        # Set the model to evaluation mode (disables dropout, batch norm stats etc.)
+        self.scout_model.eval()
+        self.guard_model.eval()
 
     def _initialise_weights(self, m):
         """
@@ -176,11 +200,16 @@ class RLManager:
             state_tensor = torch.from_numpy(state_np).float().unsqueeze(0).to(self.device)
 
             with torch.no_grad(): # Important: disable gradient calculation for inference
-                # Get Q values from the model
-                q_values = self.model(state_tensor)
-                # Select the action with the maximum Q-value
-                action = torch.argmax(q_values, dim=1).item()
-
+                if observation_dict.get("scout",0) == 1:
+                    # Get Q values from the scout model
+                    q_values = self.scout_model(state_tensor)
+                    # Select the action with the maximum Q-value
+                    action = torch.argmax(q_values, dim=1).item()
+                else:
+                    # Get Q values from the guard model
+                    q_values = self.guard_model(state_tensor)
+                    # Select the action with the maximum Q-value
+                    action = torch.argmax(q_values, dim=1).item()
             return action
 
     def reset_state(self):

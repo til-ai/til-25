@@ -31,7 +31,7 @@ TARGET_UPDATE_EVERY = 100 # How often to update the target network (in steps)
 UPDATE_EVERY = 4        # How often to run a learning step (in steps)
 
 # Epsilon-greedy exploration parameters (for training)
-EPSILON_START = 0.25
+EPSILON_START = 0.1
 EPSILON_END = 0.01
 EPSILON_DECAY = 0.9999 # Multiplicative decay factor per episode/fixed number of steps
 
@@ -67,10 +67,10 @@ CUSTOM_REWARDS_DICT = {
 
     # --- Rewards for other agents (generally keep at 0 or default for Scout's dict) ---
     # These would be relevant if training Guards, but not the Scout directly via this dict.
-    RewardNames.GUARD_WINS: 0.0,
-    RewardNames.GUARD_CAPTURES: 0.0,
-    RewardNames.GUARD_TRUNCATION: 0.0, # This corresponds to SCOUT_TRUNCATION for the Scout
-    RewardNames.GUARD_STEP: 0.0,
+    RewardNames.GUARD_WINS: +10.0,
+    RewardNames.GUARD_CAPTURES: +50.0,
+    RewardNames.GUARD_TRUNCATION: -30.0, # This corresponds to SCOUT_TRUNCATION for the Scout
+    RewardNames.GUARD_STEP: -0.02,
 }
     
 
@@ -224,6 +224,7 @@ class TrainableRLAgent:
 
         self.policy_net = DQN(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS).to(self.device)
         self.target_net = DQN(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS).to(self.device)
+        print(f"Model architecture: in={INPUT_FEATURES}, hidden={HIDDEN_LAYER_1_SIZE}/{HIDDEN_LAYER_2_SIZE}/{HIDDEN_LAYER_3_SIZE}, out={OUTPUT_ACTIONS}")
         
         if model_load_path and os.path.exists(model_load_path):
             try:
@@ -555,10 +556,10 @@ if __name__ == '__main__':
             gridworld, 
             num_episodes=100000, # Adjust as needed
             novice_track=False, # Or True for the Novice track map
-            load_model_from="agent03_100k_eps.pth", # "trained_dqn_agent.pth" to resume
-            save_model_to="agent03_new_100k_eps.pth",
+            load_model_from="agent03_new2_100k_eps.pth", # "trained_dqn_agent.pth" to resume
+            save_model_to="agent03_new3_100k_eps.pth",
             render_mode="rgb_array",
-            video_folder="./rl_renders_agent03_new"
+            video_folder="./rl_renders_agent03_new3"
         )
         print("Training finished.")
 

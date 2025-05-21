@@ -777,8 +777,8 @@ if __name__ == '__main__':
             num_episodes=20000, # Adjust as needed
             novice_track=False, # Or True for the Novice track map
             load_scout_model_from="best_scout_150k_eps_595.pth", # "trained_dqn_agent.pth" to resume
-            load_guard_model_from="guard_32k_eps.pth", # "trained_dqn_agent.pth" to resume
-            save_model_to="guard_20k_eps_w_scout.pth",
+            load_guard_model_from="guard_50k_eps.pth", # "trained_dqn_agent.pth" to resume
+            save_model_to="guard_70k_eps_w_scout.pth",
             render_mode="rgb_array",
             video_folder="./rl_renders_guard"
         )
