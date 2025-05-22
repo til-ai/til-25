@@ -72,7 +72,7 @@ CUSTOM_REWARDS_DICT = {
 
     # --- Rewards for other agents (generally keep at 0 or default for Scout's dict) ---
     # These would be relevant if training Guards, but not the Scout directly via this dict.
-    RewardNames.GUARD_WINS: 20.0,
+    RewardNames.GUARD_WINS: 5.0,
     RewardNames.GUARD_CAPTURES: 40.0,
     RewardNames.GUARD_TRUNCATION: -20, # This corresponds to SCOUT_TRUNCATION for the Scout
     RewardNames.GUARD_STEP: -0.02,
@@ -423,7 +423,7 @@ class TrainableRLAgent:
         """Soft update model parameters: θ_target = τ*θ_local + (1 - τ)*θ_target"""
         # For hard update:
         self.target_net.load_state_dict(self.policy_net.state_dict())
-        print("Updated target network.")
+        # print("Updated target network.")
 
     def save_model(self):
         torch.save(self.policy_net.state_dict(), self.model_save_path)
@@ -612,6 +612,7 @@ class TrainableRLAgent2:
 #######################HARD CODED AGENT W 2 HIDDEN LAYERS #########################################################################################
 
 # --- Main Training Loop (Example) ---
+# --- Main Training Loop (Example) ---
 def train_agent(env_module, num_episodes=2000, novice_track=False, load_scout_model_from=None, load_guard_model_from=None, save_model_to="trained_guard_dqn_agent.pth", render_mode=None, video_folder=None):
     """
     Main training loop for the RL agent.
@@ -623,161 +624,136 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_scout_mo
         load_guard_model_from (str, optional): Path to load a pre-trained guard model.
         save_model_to (str): Path to save the trained model.
     """    
-    # Initialise your game environment
-    # This assumes your 'til_environment.gridworld' has an 'env' function
-    # that returns a PettingZoo-like environment.
     env = env_module.env(env_wrappers=[CustomWrapper], render_mode=render_mode, novice=novice_track, rewards_dict=CUSTOM_REWARDS_DICT)
-    # env = env_module.env(env_wrappers=[], render_mode=render_mode, novice=novice_track)
     
-    # Create video folder if needed
     if render_mode == "rgb_array" and video_folder:
         os.makedirs(video_folder, exist_ok=True)
     
-    # Assuming your agent is always the first one in possible_agents
-    # Adjust if your setup is different or if you want to train a specific agent
-    my_agent_id = env.possible_agents[1] 
+    # Agent ID for console output and score tracking (e.g., the first guard)
+    # Ensure this agent is indeed a guard, or adjust score tracking logic.
+    # For this example, we assume env.possible_agents[1] is a guard if it exists.
+    score_tracking_agent_id = env.possible_agents[1] if len(env.possible_agents) > 1 else env.possible_agents[0]
     print(f"Possible agents: {env.possible_agents}")
-    print(f"Training agent: {my_agent_id}")
-    print(f"Action space for {my_agent_id}: {env.action_space(my_agent_id)}")
-    print(f"Observation space for {my_agent_id}: {env.observation_space(my_agent_id)}")
+    print(f"Score tracking for display/logging: {score_tracking_agent_id}") # This agent's score will be displayed
+    print(f"Action space for {score_tracking_agent_id}: {env.action_space(score_tracking_agent_id)}")
+    print(f"Observation space for {score_tracking_agent_id}: {env.observation_space(score_tracking_agent_id)}")
     
-    # Train guard agent
     guard_agent = TrainableRLAgent(model_load_path=load_guard_model_from, model_save_path=save_model_to)
-    scout_agent = TrainableRLAgent2(model_load_path=load_scout_model_from, model_save_path=None)
+    # Scout agent will use its own model and logic, not trained here but acts in the env
+    scout_agent = TrainableRLAgent2(model_load_path=load_scout_model_from, model_save_path=None) 
     
-    scores_deque = deque(maxlen=100) # For tracking recent scores
-    scores = [] # List of scores from all episodes
+    scores_deque = deque(maxlen=100)
+    scores = []
     epsilon = EPSILON_START
-    total_steps_taken = 0
+    total_steps_taken = 0 # Counts experiences added to guard_agent's buffer
+
+    # Stores (state_np, action_taken) for guards whose next state/reward is pending
+    pending_guard_transitions = {} 
 
     for i_episode in range(1, num_episodes + 1):
-        env.reset() # Reset environment at the start of each episode
-        guard_agent.reset_state() # Reset agent's internal state if any (not for this DQN)
+        env.reset()
+        guard_agent.reset_state() 
+        pending_guard_transitions.clear() # Clear at the start of each new episode
         
-        # The environment interaction loop from your test script
         current_rewards_this_episode = {agent_id: 0 for agent_id in env.possible_agents}
+        visited_states = set() # Reset for each episode for exploration bonus
         
-        # Initialise a set to track visited states
-        visited_states = set()
-        
-        # Get initial observation for our agent
-        # This part needs careful handling with PettingZoo's agent_iter
-        # We need to get the first observation for our agent
-        
-        # The loop below processes all agents. We only train `my_agent_id`.
-        # We need to store the state for `my_agent_id` to pass to `agent.step`
-        
-        last_observation_for_my_agent = None
-        
-        # Initialize frame list ONLY if this episode is a recording episode
         episode_frames = []
-        should_record_video = (render_mode == "rgb_array" and i_episode % 100 == 0) # Flag to control recording
+        should_record_video = (render_mode == "rgb_array" and video_folder and i_episode % 100 == 0)
         
-        for pet_agent_id in env.agent_iter(): # PettingZoo's iterator
+        for pet_agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
-            
-            # Capture frame ONLY if recording is enabled for this episode
-            if should_record_video: # Use the flag
+            done = termination or truncation
+
+            if should_record_video:
                 try:
                     frame = env.render()
                     if frame is not None:
                         episode_frames.append(frame)
                 except Exception as e:
-                    print(f"\nWarning: Could not render frame for episode {i_episode}, step {guard_agent.global_step}: {e}")
-                    traceback.print_exc()
- 
-            # Accumulate rewards for all agents for this step
-            for ag_id in env.agents: # env.agents are live agents in current step
+                    print(f"\nWarning: Could not render frame for episode {i_episode}: {e}")
+                    # import traceback # Optional: traceback.print_exc()
+
+            for ag_id in env.agents:
                  current_rewards_this_episode[ag_id] += env.rewards.get(ag_id, 0)
 
-            done = termination or truncation
-
-            if done: # If an agent is done, it might not take an action
-                action = None # PettingZoo expects None if agent is done
-            # Scout's action
-            elif observation["scout"] == 1:
-                # It's scout's turn
-                # 1. Process observation
-                obs_dict = {k: v if isinstance(v, (int, float)) else v.tolist() for k, v in observation.items()}
-                current_state_np = scout_agent.process_observation(obs_dict)
-
-                # 2. Select action based on pre-trained scout
-                action = scout_agent.select_action(current_state_np, epsilon)
-
-            # Our Guard's action
-            elif pet_agent_id == my_agent_id and observation["scout"] == 0:
-                # It's our agent's turn
-                # 1. Process observation
-                obs_dict = {k: v if isinstance(v, (int, float)) else v.tolist() for k, v in observation.items()}
-                current_state_np = guard_agent.process_observation(obs_dict)
-                current_location = tuple(obs_dict.get("location", [None, None]))
+            # --- Part 1: Complete a pending transition for pet_agent_id if it was a guard ---
+            if pet_agent_id in pending_guard_transitions:
+                prev_state_np, prev_action = pending_guard_transitions.pop(pet_agent_id)
+                
                 current_exploration_bonus = 0.0
-                if current_location != (None,None) and current_location not in visited_states:
-                    visited_states.add(current_location)
-                    current_exploration_bonus = EXPLORATION_BONUS_REWARD
+                next_state_np = None
+
+                if not done and observation is not None:
+                    obs_dict_for_next_state = {k: v if isinstance(v, (int, float)) else v.tolist() for k, v in observation.items()}
+                    next_state_np = guard_agent.process_observation(obs_dict_for_next_state)
+                    
+                    current_location = tuple(obs_dict_for_next_state.get("location", [None, None]))
+                    if current_location != (None,None) and current_location not in visited_states:
+                        visited_states.add(current_location)
+                        current_exploration_bonus = EXPLORATION_BONUS_REWARD
+                else: 
+                    next_state_np = np.zeros_like(prev_state_np) 
+
+                final_reward_for_prev_action = reward + current_exploration_bonus
                 
-                # Add in reward for visiting new state
-                reward += current_exploration_bonus
-                
-                # 2. Store previous transition if available
-                if last_observation_for_my_agent is not None:
-                    # last_observation_for_my_agent = (prev_state, prev_action, prev_reward_for_my_agent)
-                    prev_state_np, prev_action, prev_reward = last_observation_for_my_agent
-                    # The reward for the (s,a) pair is what we received *after* taking action 'a' in state 's'
-                    # which is the 'reward' variable from env.last() *now*
-                    guard_agent.step(prev_state_np, prev_action, reward, current_state_np, done)
-                    total_steps_taken +=1
+                guard_agent.step(prev_state_np, prev_action, final_reward_for_prev_action, next_state_np, done)
+                total_steps_taken += 1
 
-                # 3. Select action
-                action = guard_agent.select_action(current_state_np, epsilon)
-
-                # 4. Store current state, action, and this step's reward for the *next* transition
-                last_observation_for_my_agent = (current_state_np, action, reward) # reward here is for the current (s,a)
-
+            # --- Part 2: Agent selects and takes an action ---
+            action_to_take = None
+            if done:
+                action_to_take = None
             else:
-                # Other agents take random actions (or use their own policies if implemented)
-                if env.action_space(pet_agent_id) is not None:
-                     action = env.action_space(pet_agent_id).sample()
-                else:
-                    action = None # Should not happen if agent is not done
-
-            env.step(action) # Step the environment with the chosen action (or None)
+                if observation is None: # Should ideally not happen if not done
+                    if env.action_space(pet_agent_id) is not None:
+                        action_to_take = env.action_space(pet_agent_id).sample()
+                    else:
+                        action_to_take = None
+                elif observation.get("scout") == 1: # Scout's turn
+                    obs_dict_scout = {k: v if isinstance(v, (int, float)) else v.tolist() for k, v in observation.items()}
+                    current_state_np_scout = scout_agent.process_observation(obs_dict_scout)
+                    action_to_take = scout_agent.select_action(current_state_np_scout, EPSILON_START) # Scout might use fixed/low epsilon
+                
+                elif observation.get("scout") == 0: # Any Guard's turn
+                    obs_dict_guard = {k: v if isinstance(v, (int, float)) else v.tolist() for k, v in observation.items()}
+                    current_state_np_guard = guard_agent.process_observation(obs_dict_guard)
+                    action_to_take = guard_agent.select_action(current_state_np_guard, epsilon)
+                    
+                    pending_guard_transitions[pet_agent_id] = (current_state_np_guard, action_to_take)
+                
+                else: # Other agent types or unexpected observation
+                    if env.action_space(pet_agent_id) is not None:
+                         action_to_take = env.action_space(pet_agent_id).sample()
+                    else:
+                        action_to_take = None
             
-            if done and pet_agent_id == my_agent_id and last_observation_for_my_agent is not None:
-                # If our agent is done, we need to record the final transition
-                prev_state_np, prev_action, _ = last_observation_for_my_agent 
-                # The final reward is `reward` from env.last() when done is true
-                # The next_state is not critical as it's a terminal state, can be zeros or current_state_np
-                final_next_state_np = np.zeros_like(prev_state_np) # Or current_state_np
-                guard_agent.step(prev_state_np, prev_action, reward, final_next_state_np, True)
-                total_steps_taken +=1
-                last_observation_for_my_agent = None # Reset for next episode start
+            env.step(action_to_take)
 
         # End of episode
-        episode_score = current_rewards_this_episode[my_agent_id]
+        # Score for display/logging is from the perspective of 'score_tracking_agent_id'
+        episode_score = current_rewards_this_episode.get(score_tracking_agent_id, 0)
         scores_deque.append(episode_score)
         scores.append(episode_score)
         
-        epsilon = max(EPSILON_END, EPSILON_DECAY * epsilon) # Decay epsilon
+        epsilon = max(EPSILON_END, EPSILON_DECAY * epsilon)
         
-        # Save video at the end of the episode ONLY if frames were collected
-        if should_record_video and video_folder and len(episode_frames) > 0: # Check the flag
-            video_path = os.path.join(video_folder, f"episode_{i_episode:06d}.mp4") # Use 6 digits for episode number
+        if should_record_video and video_folder and len(episode_frames) > 0:
+            video_path = os.path.join(video_folder, f"episode_{i_episode:06d}.mp4")
             try:
-                # imageio needs the frames to be in (T, H, W, C) format, which env.render() provides
-                imageio.mimsave(video_path, episode_frames, fps=30) # Adjust fps as needed
-                print(f"\nSaved video for episode {i_episode} to {video_path}") # Print on a new line after progress
+                imageio.mimsave(video_path, episode_frames, fps=30)
+                print(f"\nSaved video for episode {i_episode} to {video_path}")
             except Exception as e:
                 print(f"\nWarning: Could not save video for episode {i_episode} to {video_path}: {e}")
-                traceback.print_exc()
        
-        print(f'\rEpisode {i_episode}\tAverage Score (last 100): {np.mean(scores_deque):.2f}\tEpsilon: {epsilon:.4f}\tTotal Steps: {total_steps_taken}', end="")
+        print(f'\rEpisode {i_episode}\tAvg Score (last 100): {np.mean(scores_deque):.2f}\tEpsilon: {epsilon:.4f}\tGuard Steps: {total_steps_taken}', end="")
         if i_episode % 100 == 0:
-            print(f'\rEpisode {i_episode}\tAverage Score (last 100): {np.mean(scores_deque):.2f}\tEpsilon: {epsilon:.4f}\tTotal Steps: {total_steps_taken}')
+            print(f'\rEpisode {i_episode}\tAvg Score (last 100): {np.mean(scores_deque):.2f}\tEpsilon: {epsilon:.4f}\tGuard Steps: {total_steps_taken}')
             guard_agent.save_model()
         
-        if np.mean(scores_deque) >= 2000.0: # Example condition to stop training
-            print(f'\nEnvironment solved in {i_episode-100:d} episodes!\tAverage Score: {np.mean(scores_deque):.2f}')
+        # Example stopping condition based on the tracked agent's score average
+        if len(scores_deque) == 100 and np.mean(scores_deque) >= 2000.0: 
+            print(f'\nEnvironment potentially solved in {i_episode:d} episodes!\tAverage Score: {np.mean(scores_deque):.2f}')
             guard_agent.save_model()
             break
             
@@ -806,8 +782,8 @@ if __name__ == '__main__':
             num_episodes=50000, # Adjust as needed
             novice_track=False, # Or True for the Novice track map
             load_scout_model_from="best_scout_150k_eps_595.pth", # "trained_dqn_agent.pth" to resume
-            load_guard_model_from="guard_55k_eps_w_scout_v2.pth", # "trained_dqn_agent.pth" to resume
-            save_model_to="guard_105k_eps_w_scout_v2.pth",
+            load_guard_model_from="guard_56k_eps_multi.pth", # "trained_dqn_agent.pth" to resume
+            save_model_to="guard_106k_eps_multi.pth",
             render_mode="rgb_array",
             video_folder="./rl_renders_guard2"
         )

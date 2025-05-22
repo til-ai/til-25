@@ -6,7 +6,7 @@ import numpy as np
 import random
 import os
 from collections import deque, namedtuple
-
+import imageio
 # --- Configuration (Adjust these as needed) ---
 # Environment specific (match your game)
 MAP_SIZE_X = 16
@@ -17,6 +17,7 @@ MAX_STEPS_PER_EPISODE = 100 # Max steps in one round of the game
 INPUT_FEATURES = 288  # 7*5*8 (viewcone) + 4 (direction) + 2 (location) + 1 (scout) + 1 (step)
 HIDDEN_LAYER_1_SIZE = 256
 HIDDEN_LAYER_2_SIZE = 256
+HIDDEN_LAYER_3_SIZE = 256
 OUTPUT_ACTIONS = 5  # 0:Forward, 1:Backward, 2:TurnL, 3:TurnR, 4:Stay
 
 # Training Hyperparameters
@@ -28,9 +29,9 @@ TARGET_UPDATE_EVERY = 100 # How often to update the target network (in steps)
 UPDATE_EVERY = 4        # How often to run a learning step (in steps)
 
 # Epsilon-greedy exploration parameters (for training)
-EPSILON_START = 1.0
+EPSILON_START = 0.015
 EPSILON_END = 0.01
-EPSILON_DECAY = 0.995 # Multiplicative decay factor per episode/fixed number of steps
+EPSILON_DECAY = 0.999 # Multiplicative decay factor per episode/fixed number of steps
 
 # PER Parameters
 PER_ALPHA = 0.6  # Prioritization exponent (0 for uniform, 1 for full prioritization)
@@ -180,6 +181,24 @@ class DQN(nn.Module):
         x = self.fc3(x)
         return x
 
+class DQN2(nn.Module):
+    def __init__(self, input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim):
+        super(DQN2, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim1)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim1, hidden_dim2)
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(hidden_dim2, hidden_dim3)
+        self.relu3 = nn.ReLU()
+        self.fc4 = nn.Linear(hidden_dim3, output_dim)
+
+    def forward(self, x):
+        x = self.relu1(self.fc1(x))
+        x = self.relu2(self.fc2(x))
+        x = self.relu3(self.fc3(x))
+        x = self.fc4(x)
+        return x
+    
 # --- Trainable RL Agent ---
 class TrainableRLAgent:
     def __init__(self, model_load_path=None, model_save_path="trained_dqn_model.pth"):
@@ -349,9 +368,178 @@ class TrainableRLAgent:
     def reset_state(self): # For compatibility with potential stateful components, not used in this DQN
         pass
 
+class TrainableRLAgent2:
+    def __init__(self, model_load_path=None, model_save_path="trained_dqn_model.pth"):
+        self.device = DEVICE
+        print(f"Using device: {self.device}")
+
+        self.policy_net = DQN2(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS).to(self.device)
+        self.target_net = DQN2(INPUT_FEATURES, HIDDEN_LAYER_1_SIZE, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_3_SIZE, OUTPUT_ACTIONS).to(self.device)
+        
+        if model_load_path and os.path.exists(model_load_path):
+            try:
+                self.policy_net.load_state_dict(torch.load(model_load_path, map_location=self.device))
+                print(f"Loaded pre-trained policy_net from {model_load_path}")
+            except Exception as e:
+                print(f"Error loading model from {model_load_path}: {e}. Initializing with random weights.")
+                self.policy_net.apply(self._initialize_weights)
+        else:
+            print(f"No model path provided or path {model_load_path} does not exist. Initializing policy_net with random weights.")
+            self.policy_net.apply(self._initialize_weights)
+
+        self.target_net.load_state_dict(self.policy_net.state_dict()) # Initialize target_net with policy_net weights
+        self.target_net.eval() # Target network is only for inference
+
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=LEARNING_RATE)
+        self.memory = PrioritizedReplayBuffer(BUFFER_SIZE, alpha=PER_ALPHA)
+        
+        self.model_save_path = model_save_path
+        self.t_step = 0 # Counter for triggering learning and target network updates
+        self.beta = PER_BETA_START
+        self.beta_increment_per_sampling = (1.0 - PER_BETA_START) / PER_BETA_FRAMES
+        self.global_step = 0
+
+
+    def _initialize_weights(self, m):
+        if isinstance(m, nn.Linear):
+            nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+
+    def _unpack_viewcone_tile(self, tile_value): # Same as in rl_agent_python_v1
+        tile_features = []
+        tile_features.append(float(tile_value & 0b01)) 
+        tile_features.append(float((tile_value & 0b10) >> 1))
+        for i in range(2, 8):
+            tile_features.append(float((tile_value >> i) & 1))
+        return tile_features
+
+    def process_observation(self, observation_dict): # Same as in rl_agent_python_v1
+        processed_features = []
+        viewcone = observation_dict.get("viewcone", [])
+        for r in range(7):
+            for c in range(5):
+                tile_value = viewcone[r][c] if r < len(viewcone) and c < len(viewcone[r]) else 0
+                processed_features.extend(self._unpack_viewcone_tile(tile_value))
+        
+        direction = observation_dict.get("direction", 0)
+        direction_one_hot = [0.0] * 4
+        if 0 <= direction < 4: direction_one_hot[direction] = 1.0
+        processed_features.extend(direction_one_hot)
+
+        location = observation_dict.get("location", [0, 0])
+        norm_x = location[0] / MAP_SIZE_X if MAP_SIZE_X > 0 else 0.0
+        norm_y = location[1] / MAP_SIZE_Y if MAP_SIZE_Y > 0 else 0.0
+        processed_features.extend([norm_x, norm_y])
+
+        scout_role = float(observation_dict.get("scout", 0))
+        processed_features.append(scout_role)
+
+        step = observation_dict.get("step", 0)
+        norm_step = step / MAX_STEPS_PER_EPISODE if MAX_STEPS_PER_EPISODE > 0 else 0.0
+        processed_features.append(norm_step)
+        
+        # Ensure correct feature length (should be INPUT_FEATURES)
+        if len(processed_features) != INPUT_FEATURES:
+            # This indicates an issue with feature processing or constants
+            raise ValueError(f"Feature length mismatch. Expected {INPUT_FEATURES}, got {len(processed_features)}")
+
+        return np.array(processed_features, dtype=np.float32) # Return as numpy array for buffer
+
+    def select_action(self, state_np, epsilon=0.0):
+        """
+        Selects an action using epsilon-greedy policy.
+        Args:
+            state_np (np.ndarray): Processed state as a numpy array.
+            epsilon (float): Exploration rate.
+        Returns:
+            int: Selected action.
+        """
+        if random.random() > epsilon:
+            state_tensor = torch.from_numpy(state_np).float().unsqueeze(0).to(self.device)
+            self.policy_net.eval() # Set to evaluation mode for action selection
+            with torch.no_grad():
+                action_values = self.policy_net(state_tensor)
+            self.policy_net.train() # Set back to training mode
+            return np.argmax(action_values.cpu().data.numpy())
+        else:
+            return random.choice(np.arange(OUTPUT_ACTIONS))
+
+    def step(self, state, action, reward, next_state, done):
+        self.memory.add(state, action, reward, next_state, done)
+
+        # Increment the global step counter every time step is called for the agent
+        self.global_step += 1
+
+        # This part correctly triggers the LEARNING step every UPDATE_EVERY steps
+        self.t_step = (self.t_step + 1) % UPDATE_EVERY
+        if self.t_step == 0:
+            if len(self.memory) > BATCH_SIZE:
+                # Perform the learning step
+                experiences, indices, weights = self.memory.sample(BATCH_SIZE, beta=self.beta)
+                self.learn(experiences, indices, weights, GAMMA)
+                # Anneal beta, typically done per learning step or total step
+                self.beta = min(1.0, self.beta + self.beta_increment_per_sampling)
+
+
+        # This part correctly triggers the TARGET NETWORK UPDATE every TARGET_UPDATE_EVERY global steps
+        # Use the global_step counter for this check
+        if self.global_step % TARGET_UPDATE_EVERY == 0:
+             self.update_target_net() # This method performs the hard copy
+
+
+    def learn(self, experiences, indices, importance_sampling_weights, gamma):
+        """
+        Update value parameters using given batch of experience tuples.
+        Q_targets = r + γ * Q_target(s', argmax_a Q_policy(s', a))
+        Args:
+            experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples
+            indices (np.ndarray): indices of these experiences in the SumTree
+            importance_sampling_weights (torch.Tensor): weights for IS
+            gamma (float): discount factor
+        """
+        states, actions, rewards, next_states, dones = experiences
+
+        # Get max predicted Q values (for next states) from policy network
+        # This is for Double DQN: action selection from policy_net, evaluation from target_net
+        q_next_policy = self.policy_net(next_states).detach().max(1)[1].unsqueeze(1)
+        # Get Q values for next_states from target_net using actions selected by policy_net
+        q_targets_next = self.target_net(next_states).detach().gather(1, q_next_policy)
+        
+        # Compute Q targets for current states 
+        q_targets = rewards + (gamma * q_targets_next * (1 - dones))
+
+        # Get expected Q values from policy_net
+        q_expected = self.policy_net(states).gather(1, actions)
+
+        # Compute TD errors for PER
+        td_errors = (q_targets - q_expected).abs().cpu().detach().numpy().flatten()
+        self.memory.update_priorities(indices, td_errors)
+
+        # Compute loss (element-wise multiplication with IS weights)
+        loss = (importance_sampling_weights * nn.MSELoss(reduction='none')(q_expected, q_targets)).mean()
+        
+        self.optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 1.0) # Gradient clipping
+        self.optimizer.step()
+
+
+    def update_target_net(self):
+        """Soft update model parameters: θ_target = τ*θ_local + (1 - τ)*θ_target"""
+        # For hard update:
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        # print("Updated target network.")
+
+    def save_model(self):
+        torch.save(self.policy_net.state_dict(), self.model_save_path)
+        print(f"Model saved to {self.model_save_path}")
+
+    def reset_state(self): # For compatibility with potential stateful components, not used in this DQN
+        pass
 
 # --- Main Training Loop (Example) ---
-def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_from=None, save_model_to="trained_dqn_agent.pth"):
+def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_from=None, guard_model=None, save_model_to="trained_dqn_agent.pth", render_mode=None, video_folder=None):
     """
     Main training loop for the RL agent.
     Args:
@@ -364,8 +552,9 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_fr
     # Initialize your game environment
     # This assumes your 'til_environment.gridworld' has an 'env' function
     # that returns a PettingZoo-like environment.
-    env = env_module.env(env_wrappers=[], render_mode=None, novice=novice_track)
-    
+    env = env_module.env(env_wrappers=[], render_mode=render_mode, novice=novice_track)
+    if render_mode == "rgb_array" and video_folder:
+        os.makedirs(video_folder, exist_ok=True)
     # Assuming your agent is always the first one in possible_agents
     # Adjust if your setup is different or if you want to train a specific agent
     my_agent_id = env.possible_agents[0] 
@@ -374,7 +563,9 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_fr
     print(f"Observation space for {my_agent_id}: {env.observation_space(my_agent_id)}")
 
     agent = TrainableRLAgent(model_load_path=load_model_from, model_save_path=save_model_to)
-    
+    guard = TrainableRLAgent2(model_load_path=guard_model, model_save_path=None)
+
+
     scores_deque = deque(maxlen=100) # For tracking recent scores
     scores = [] # List of scores from all episodes
     epsilon = EPSILON_START
@@ -393,12 +584,23 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_fr
         
         # The loop below processes all agents. We only train `my_agent_id`.
         # We need to store the state for `my_agent_id` to pass to `agent.step`
-        
+        episode_frames = []
+        should_record_video = (render_mode == "rgb_array" and video_folder and i_episode % 100 == 0)
+
         last_observation_for_my_agent = None
         
         for pet_agent_id in env.agent_iter(): # PettingZoo's iterator
             observation, reward, termination, truncation, info = env.last()
             
+            if should_record_video:
+                try:
+                    frame = env.render()
+                    if frame is not None:
+                        episode_frames.append(frame)
+                except Exception as e:
+                    print(f"\nWarning: Could not render frame for episode {i_episode}: {e}")
+                    # import traceback # Optional: traceback.print_exc()
+
             # Accumulate rewards for all agents for this step
             for ag_id in env.agents: # env.agents are live agents in current step
                  current_rewards_this_episode[ag_id] += env.rewards.get(ag_id, 0)
@@ -407,7 +609,7 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_fr
 
             if done: # If an agent is done, it might not take an action
                 action = None # PettingZoo expects None if agent is done
-            elif pet_agent_id == my_agent_id:
+            elif observation.get("scout") == 1:
                 # It's our agent's turn
                 # 1. Process observation
                 obs_dict = {k: v if isinstance(v, (int, float)) else v.tolist() for k, v in observation.items()}
@@ -431,7 +633,7 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_fr
             else:
                 # Other agents take random actions (or use their own policies if implemented)
                 if env.action_space(pet_agent_id) is not None:
-                     action = env.action_space(pet_agent_id).sample()
+                     action = guard.select_action(current_state_np, epsilon) # Use guard agent for other agents
                 else:
                     action = None # Should not happen if agent is not done
 
@@ -453,6 +655,14 @@ def train_agent(env_module, num_episodes=2000, novice_track=False, load_model_fr
         scores.append(episode_score)
         
         epsilon = max(EPSILON_END, EPSILON_DECAY * epsilon) # Decay epsilon
+
+        if should_record_video and video_folder and len(episode_frames) > 0:
+                    video_path = os.path.join(video_folder, f"episode_{i_episode:06d}.mp4")
+                    try:
+                        imageio.mimsave(video_path, episode_frames, fps=30)
+                        print(f"\nSaved video for episode {i_episode} to {video_path}")
+                    except Exception as e:
+                        print(f"\nWarning: Could not save video for episode {i_episode} to {video_path}: {e}")
 
         print(f'\rEpisode {i_episode}\tAverage Score (last 100): {np.mean(scores_deque):.2f}\tEpsilon: {epsilon:.4f}\tTotal Steps: {total_steps_taken}', end="")
         if i_episode % 100 == 0:
@@ -486,10 +696,12 @@ if __name__ == '__main__':
         # Set save_model_to to where you want the final model to be saved
         trained_scores = train_agent(
             gridworld, 
-            num_episodes=100000, # Adjust as needed
+            num_episodes=50000, # Adjust as needed
             novice_track=False, # Or True for the Novice track map
-            load_model_from="agent_66k_eps.pth", # "trained_dqn_agent.pth" to resume
-            save_model_to="agent_166k_eps.pth"
+            load_model_from="best_scout_150k_eps_595.pth", # "trained_dqn_agent.pth" to resume
+            guard_model="guard_56k_eps_multi.pth", 
+            save_model_to="basic_scout_200k_eps.pth",
+            video_folder="scout"
         )
         print("Training finished.")
 
