@@ -2,3 +2,15 @@
 
 fastapi==0.115.12
 uvicorn[standard]==0.34.2
+datasets
+transformers
+evaluate
+torch
+torchaudio
+soundfile
+librosa
+jiwer
+accelerate>=0.26.0
+tensorboard
+noisereduce
+peft

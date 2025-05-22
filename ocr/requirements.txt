@@ -1,4 +1,9 @@
-# Dependencies for the OCR container.
-
-fastapi==0.115.12
-uvicorn[standard]==0.34.2
+fastapi
+uvicorn[standard]
+opencv-python-headless # For image processing
+python-multipart
+numpy
+paddleocr==2.10.0
+#python-doctr
+#torch
+#torchvision
