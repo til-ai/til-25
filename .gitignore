@@ -172,3 +172,13 @@ cython_debug/
 src/gcloud/*.json
 **/*.jpg
 **/*.png
+**/*.pt
+**/*.txt
+**/*.mp4
+**/*.pth
+**/*.json
+**/*.safetensors
+**/*.out..tfevents..1747687598..instance-hihi..104330..0
+**/*.out..tfevents..1747837213..instance-hihi..685710..0
+**/*.cache
+**/*.csv
