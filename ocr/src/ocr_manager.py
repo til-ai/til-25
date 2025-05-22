@@ -22,6 +22,8 @@ class OCRManager:
         cls_model_dir = os.path.join(models_base_dir, os.getenv('CLS_MODEL_SUBDIR', 'cls/en/ch_ppocr_mobile_v2.0_cls_infer'))
         layout_model_dir = os.path.join(models_base_dir, os.getenv('LAYOUT_MODEL_SUBDIR', 'layout/en/picodet_lcnet_x1_0_fgd_layout_infer'))
 
+        custom_dict_in_container = "/opt/paddleocr_models/dicts/custom_char_dict.txt" # EXAMPLE PATH
+
         print(f"Constructed Detection model path: {det_model_dir}")
         print(f"Constructed Recognition model path: {rec_model_dir}")
         print(f"Constructed Classification model path: {cls_model_dir}")
@@ -41,6 +43,13 @@ class OCRManager:
                  print(f"SUCCESS: Found {model_name} model file at {model_path}")
 
 
+                # Verify the custom dictionary exists at the expected path
+        if not os.path.exists(custom_dict_in_container):
+            print(f"CRITICAL WARNING: Custom dictionary NOT FOUND at {custom_dict_in_container}")
+        else:
+            print(f"SUCCESS: Found custom dictionary at {custom_dict_in_container}")
+
+
         self.ocr_engine = PaddleOCR(
             use_angle_cls=False,
             lang='en',
@@ -50,6 +59,7 @@ class OCRManager:
             # Explicitly pass the model directory paths
             det_model_dir=det_model_dir,
             rec_model_dir=rec_model_dir,
+            rec_char_dict_path=custom_dict_in_container,
             cls_model_dir=cls_model_dir,
             layout_model_dir=layout_model_dir
         )
@@ -93,11 +103,11 @@ class OCRManager:
             left_column_text, right_column_text = self._separate_columns(all_text_lines, image_width)
             
             # Combine columns into a single string
-            full_text = f"--- LEFT COLUMN ---\n{left_column_text}\n\n--- RIGHT COLUMN ---\n{right_column_text}"
+            full_text = f"{left_column_text}\n\n{right_column_text}"
             return full_text
 
         except Exception as e:
             print(f"Error in OCRManager.ocr: {e}")
-            # import traceback # Uncomment for detailed stack trace during debugging
-            # traceback.print_exc()
+            import traceback # Uncomment for detailed stack trace during debugging
+            traceback.print_exc()
             return f"Error during OCR processing: {str(e)}"
