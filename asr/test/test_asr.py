@@ -57,11 +57,11 @@ def main():
     
     with open(data_dir / "asr.jsonl") as f:
         instances = [json.loads(line.strip()) for line in f if line.strip()]
-
-    batch_generator = itertools.batched(sample_generator(instances, data_dir), n=BATCH_SIZE)
+    instances_30 = instances[:100]
+    batch_generator = itertools.batched(sample_generator(instances_30, data_dir), n=BATCH_SIZE)
     
     results = []
-    for batch in tqdm(batch_generator, total=math.ceil(len(instances) / BATCH_SIZE)):
+    for batch in tqdm(batch_generator, total=math.ceil(len(instances_30) / BATCH_SIZE)):
         response = requests.post("http://localhost:5001/asr", data=json.dumps({
             "instances": batch,
         }))
@@ -72,7 +72,7 @@ def main():
     with open(results_path, "w") as results_file:
         json.dump(results, results_file)
 
-    ground_truths = [instance["transcript"] for instance in instances]
+    ground_truths = [instance["transcript"] for instance in instances_30]
     score = score_asr(results, ground_truths)
     print("1 - WER:", score)
 

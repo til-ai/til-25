@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copies your source files.
 COPY src .
 #COPY models .
-COPY whisper-small.en
+COPY whisper_tiny_finetuned .
 
 # Starts your model server.
 CMD uvicorn asr_server:app --port 5001 --host 0.0.0.0

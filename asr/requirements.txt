@@ -12,3 +12,5 @@ librosa
 jiwer
 accelerate>=0.26.0
 tensorboard
+noisereduce
+peft
