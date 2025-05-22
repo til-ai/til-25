@@ -1,13 +1,17 @@
 """Manages the CV model."""
 from typing import Any
-from ultralytics import YOLO
+import os
 import io
 from PIL import Image
 import numpy as np
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
-import math
+from ultralytics import YOLO
+from sahi import AutoDetectionModel
+from sahi.predict import get_sliced_prediction
+import uuid
+import logging as log
 
 class LetterboxTransform:
     """
@@ -49,27 +53,71 @@ class LetterboxTransform:
 
 class CVManager:
     def __init__(self):
-        # Load YOLO model
-        self.model = YOLO("yolo11_v2.pt")
+        # Load the YOLO model
+        self.yolo_model = YOLO("yolo11_v3.pt")
         
-    def cv(self, image: bytes) -> list[dict[str, Any]]:
+        # SAHI-compatible detection model
+        yolo_model_path = "yolo11_v3.pt"
+        sahi_model_type = 'ultralytics'  
+        confidence_threshold = 0.3
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        try:
+            self.sahi_detection_model = AutoDetectionModel.from_pretrained(
+                model_type=sahi_model_type,
+                model_path=yolo_model_path,
+                confidence_threshold=confidence_threshold,
+                device=device,
+            )
+            log.info("sahi works")
+        except Exception as e:
+            log.info(f"Failed to initialize SAHI model: {e}")
+            self.sahi_detection_model = None
+            
+        # Directory for temporarily storing input images for SAHI
+        self.sahi_temp_dir = "temp_sahi_images"
+        os.makedirs(self.sahi_temp_dir, exist_ok=True)
+        
+    def cv(self, image: bytes, use_sahi: bool = True) -> list[dict[str, Any]]:
         """Performs object detection on an image.
         
         Args:
             image: The image file in bytes.
+            use_sahi: Whether to use SAHI for sliced inference (True) or regular YOLO (False).
             
         Returns:
             A list of predictions with required format:
-            - (x,y): Top-left corner coordinates of the bounding box (in pixels)
-            - (w,h): Width and height of the bounding box (in pixels)
+            - bbox: [x, y, w, h] - Bounding box coordinates and dimensions in pixels
             - category_id: Index of the predicted category
+            - score: Confidence score (only returned with SAHI)
         """       
+        if use_sahi and self.sahi_detection_model:
+            # Use SAHI approach with sliced inference
+            return self._process_with_sahi(image)
+        else:
+            # Use standard YOLO approach
+            return self._process_with_yolo(image)
+            
+    def _process_with_yolo(self, image: bytes) -> list[dict[str, Any]]:
+        """Process image using standard YOLO inference."""
         # Process the image
-        processed_image, orig_h, orig_w, scale, padding = preprocess_image(image)
+        pil_image = Image.open(io.BytesIO(image)).convert('RGB')
+        original_width, original_height = pil_image.size
+        
+        # Apply letterboxing transform
+        letterbox = LetterboxTransform(size=(640, 640))
+        padded_img, scale, padding = letterbox(pil_image)
         pad_left, pad_top = padding
         
+        # Convert to tensor and prepare for model
+        transform = T.Compose([T.ToTensor()])
+        tensor = transform(padded_img).unsqueeze(0)  # Add batch dimension
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        tensor = tensor.to(device)
+        
         # Run prediction
-        result = self.model.predict(processed_image)[0]
+        result = self.yolo_model.predict(tensor)[0]
         boxes = result.boxes
         
         # Get coordinates (in xyxy format: x1, y1, x2, y2)
@@ -82,7 +130,7 @@ class CVManager:
         output = []
         
         # Process each detection
-        for pred_index in range(boxes.shape[0]):
+        for pred_index in range(len(boxes)):
             # Extract coordinates from model output (these are in padded image space)
             x1, y1, x2, y2 = [float(coord) for coord in bounding_boxes_xyxy[pred_index]]
             
@@ -102,44 +150,63 @@ class CVManager:
             w = x2 - x1
             h = y2 - y1
             
-            # Get category ID
+            # Get category ID and confidence
             category_id = int(classes[pred_index].item())
+            score = float(confidence[pred_index].item())
             
             # Create prediction dictionary in required format
             pred_dict = {
                 "bbox": [x1, y1, w, h],
-                "category_id": category_id
+                "category_id": category_id,
+                "score": score
             }
-            print(pred_dict)
+            
             output.append(pred_dict)
             
         return output
-
-def preprocess_image(image: bytes):
-    """
-    Preprocess the image for the YOLO model with letterboxing to maintain aspect ratio.
     
-    Args:
-        image: Image bytes
-        
-    Returns:
-        Processed tensor, original height, original width, scale, padding
-    """
-    # Convert bytes to PIL Image
-    pil_image = Image.open(io.BytesIO(image)).convert('RGB')
-    original_width, original_height = pil_image.size
-    
-    # Apply letterboxing transform (resize with padding to maintain aspect ratio)
-    letterbox = LetterboxTransform(size=(640, 640))
-    padded_img, scale, padding = letterbox(pil_image)
-    
-    # Convert to tensor
-    transform = T.Compose([
-        T.ToTensor(),
-    ])
-    tensor = transform(padded_img).unsqueeze(0)  # Add batch dimension
-    
-    # Move tensor to GPU if available
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    return tensor.to(device), original_height, original_width, scale, padding
+    def _process_with_sahi(self, image: bytes) -> list[dict[str, Any]]:
+        """Process image using SAHI sliced inference."""
+        if not self.sahi_detection_model:
+            print("SAHI model not initialized. Falling back to standard YOLO.")
+            return self._process_with_yolo(image)
+            
+        try:
+            # Save the image temporarily to work with SAHI
+            temp_image_path = os.path.join(self.sahi_temp_dir, f"{uuid.uuid4()}.jpg")
+            with open(temp_image_path, "wb") as f:
+                f.write(image)
+                
+            # Get predictions using SAHI sliced inference
+            result = get_sliced_prediction(
+                temp_image_path,
+                self.sahi_detection_model,
+                slice_height=320,
+                slice_width=320,
+                overlap_height_ratio=0.2,
+                overlap_width_ratio=0.2,
+            )
+            
+            # Convert to COCO predictions format
+            coco_predictions = result.to_coco_predictions(image_id=0)
+            
+            # Format the results according to COCO format
+            detections = []
+            for pred in coco_predictions:
+                # COCO format bbox is [x, y, width, height]
+                detections.append({
+                    "bbox": pred["bbox"],  # Already in [x, y, w, h] format
+                    "category_id": pred["category_id"],
+                    "score": pred["score"]
+                })
+            
+            # Clean up temporary file
+            if os.path.exists(temp_image_path):
+                os.remove(temp_image_path)
+                
+            return detections
+            
+        except Exception as e:
+            print(f"SAHI processing failed: {e}")
+            print("Falling back to standard YOLO.")
+            return self._process_with_yolo(image)

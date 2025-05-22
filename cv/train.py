@@ -23,18 +23,26 @@ def custom_albumentations_init(self, p=1.0):
     try:
         # Define transformations that maintain image dimensions
         T = [
-            A.RandomRain(p=0.2, slant_lower=-10, slant_upper=10, 
-                         drop_length=20, drop_width=1, drop_color=(200, 200, 200), 
-                         blur_value=5, brightness_coefficient=0.9),  
-            # Removed Rotate with crop_border=True - this was causing variable sizes
-            A.Blur(p=0.3),
-            A.MedianBlur(p=0.3),
-            A.ToGray(p=0.01),
-            A.CLAHE(p=0.01),
-            A.ImageCompression(quality_lower=75, p=0.2),
-            # Add safe rotation that doesn't crop the image
-            A.SafeRotate(limit=10, p=0.5, border_mode=cv2.BORDER_CONSTANT),
+            # Light weather effects
+            A.RandomRain(p=0.2, drop_length=10, drop_width=1, drop_color=(200, 200, 200), 
+                       blur_value=3, brightness_coefficient=0.95),
+            
+            # Moderate blur - reduced probability
+            A.Blur(p=0.2, blur_limit=(3, 5)),
+            A.MedianBlur(p=0.2, blur_limit=3),
+            
+            # Color adjustments
+            A.ToGray(p=0.02),
+            A.CLAHE(p=0.2, clip_limit=(1, 3)),
+            A.RandomBrightnessContrast(p=0.2, brightness_limit=0.1, contrast_limit=0.1),
+            
+            # Compression
+            A.ImageCompression(quality_lower=85, p=0.2),
+            
+            # Gentle rotation
+            A.SafeRotate(limit=5, p=0.2, border_mode=cv2.BORDER_CONSTANT),
         ]
+
         self.transform = A.Compose(T, bbox_params=A.BboxParams(format="yolo"))
         LOGGER.info(prefix + ", ".join(f"{x}".replace("always_apply=False, ", "") for x in T if x.p))
     except ImportError:  # package not installed, skip
@@ -62,15 +70,15 @@ def train():
     sahi_metrics_file = output_path / "sahi_evaluation_metrics.json"
     
     # Using standard model name
-    model = YOLO("yolo11_v1.pt")
+    model = YOLO("yolo11m.pt")
     
     # Train the model
     # Now we can use 'albumentations' parameter because we patched the Albumentations class
     results = model.train(
         data=str(output_path / "dataset.yaml"),
-        epochs=80,
+        epochs=100,
         imgsz=640,
-        name='yolo11_v2',
+        name='yolo11_v4',
         save=True,
         save_period=10,
         augment=True,
