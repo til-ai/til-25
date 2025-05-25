@@ -73,7 +73,7 @@ def main():
         json.dump(results, results_file)
 
     ground_truths = [instance["transcript"] for instance in instances]
-    score = score_asr(results, ground_truths)
+    score = score_asr(ground_truths, results)
     print("1 - WER:", score)
 
 
