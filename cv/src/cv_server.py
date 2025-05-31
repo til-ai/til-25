@@ -7,10 +7,8 @@
 import base64
 from typing import Any
 
+from cv_manager import CVManager
 from fastapi import FastAPI, Request
-
-from .cv_manager import CVManager
-
 
 app = FastAPI()
 manager = CVManager()
