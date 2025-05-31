@@ -4,7 +4,7 @@
 # The base image, an example deep learning VM.
 # For a full list, see https://us-docker.pkg.dev/deeplearning-platform-release/gcr.io/
 # For info, see https://cloud.google.com/deep-learning-vm/docs/images#supported-frameworks
-FROM python:3.12-slim
+FROM us-docker.pkg.dev/deeplearning-platform-release/gcr.io/pytorch-gpu.2-2.py310
 
 # Configures settings for the image.
 ENV PYTHONDONTWRITEBYTECODE=1

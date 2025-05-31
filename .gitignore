@@ -1,4 +1,5 @@
 # .gitignore tells Git not to track these files.
+.vscode
 
 
 # Large files like model weights, training data, and results should be ignored.
